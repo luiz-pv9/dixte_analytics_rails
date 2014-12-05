@@ -1,7 +1,7 @@
 class DataDetector
 	# Patterns used to check against string values to detect types
 	@@ipv4_pattern = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/
-	@@geolocation_pattern = /^geo\(\d+([\.,]\d+)?;\d+([\.,]\d+)?\)$/
+	@@geolocation_pattern = /^geo\(\d+([\.]\d+)?;\d+([\.]\d+)?\)$/
 
 	class << self
 		# If the value is of a native json type, returns it. If not, returns nil
