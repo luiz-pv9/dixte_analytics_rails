@@ -1,16 +1,12 @@
 require 'tracking_value'
+require 'property_key'
 
 class PropertyTracker
-
 	attr_reader :key, :properties
 	@@collection = MongoHelper.database.collection 'properties'
 
-
 	def initialize(key, properties)
-		@key = key
-		if key.is_a? Array
-			@key = key.join('#')
-		end
+		@key = PropertyKey.normalize(key)
 		@properties = {}
 		properties.each do |key, val|
 			@properties[key] = TrackingValue.new(val)
