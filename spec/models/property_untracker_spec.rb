@@ -34,14 +34,36 @@ describe PropertyUntracker do
 					'name' => {
 						'type' => 'string',
 						'values' => {
-							'Luiz' => 2 # change
+							'Luiz' => 1
 						}
 					}
 				}
 			})
 		end
 
-		it 'removes the value of a property from the values hash if the counter reaches zero'
+		it 'removes the value of a property from the values hash if the counter reaches zero' do
+			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
+			PropertyTracker.new('foo', {'name' => 'Paulo'}).save!
+			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
+			
+			PropertyUntracker.new('foo', {'name' => 'Paulo'}).save!
+
+			expect(@collection.count).to eq(1)
+			doc = @collection.find_one
+			expect(doc).to eq({
+				'_id' => doc['_id'],
+				'key' => 'foo',
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz' => 2
+						}
+					}
+				}
+			})
+		end
+
 		it 'removes the property from the properties hash if the counter of all values reaches zero'
 		it 'removes the property document from the database if all values of all properties reaches zero'
 	end
