@@ -11,19 +11,29 @@ class PropertyTracker
 		if key.is_a? Array
 			@key = key.join('#')
 		end
-		@properties = properties.map do |value|
-			TrackingValue.new value
+		@properties = {}
+		properties.each do |key, val|
+			@properties[key] = TrackingValue.new(val)
 		end
 	end
 
-	def save!
+	def save!(force_update_types = false)
 		document = @@collection.find_one(:key => @key)
-		property = Property.new document
-		insert_query = {}
-		update_query = {}
-		@properties.each do |p|
-			unless property.has_property(p)
+		unless document
+			document = {'key' => @key, 'properties' => {}}
+			@@collection.insert(document)
+		end
+		property = Property.new(document)
+
+		update_query = {'$inc' => {}, '$set' => {}}
+		@properties.each do |p, v|
+			if !property.has_property(p) or force_update_types
+				update_query['$set']["properties.#{p}.type"] = v.type.to_s
+			end
+			v.to_track_value.each do |v_val|
+				update_query['$inc']["properties.#{p}.values.#{v_val}"] = 1
 			end
 		end
+		@@collection.update({'key' => @key}, update_query)
 	end
 end

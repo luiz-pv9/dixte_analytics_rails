@@ -1,0 +1,18 @@
+{
+	"key": 'Click button',
+	"properties": {
+		"label": {
+			"type": "string",
+			"values": {
+				"Help": 20,
+				"What": 3
+			}
+		},
+		"width": {
+			"type": "number",
+			"values": {
+				"*": 23
+			}
+		}
+	}
+}
