@@ -64,6 +64,45 @@ describe PropertyTracker do
 				}
 			})
 		end
+
+		it 'increments the counter of different values for the same proprety' do
+			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
+			PropertyTracker.new('foo', {'name' => 'Paulo'}).save!
+			expect(@collection.count).to eq(1)
+			doc = @collection.find_one
+			expect(doc).to eq({
+				'_id' => doc['_id'],
+				'key' => 'foo',
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz' => 1,
+							'Paulo' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'tracks values inside the array in a single property' do
+			PropertyTracker.new('foo', {'name' => ['Luiz', 'Paulo']}).save!
+			expect(@collection.count).to eq(1)
+			doc = @collection.find_one
+			expect(doc).to eq({
+				'_id' => doc['_id'],
+				'key' => 'foo',
+				'properties' => {
+					'name' => {
+						'type' => 'array',
+						'values' => {
+							'Luiz' => 1,
+							'Paulo' => 1
+						}
+					}
+				}
+			})
+		end
 	end
 end
 

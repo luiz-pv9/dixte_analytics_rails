@@ -25,12 +25,14 @@ class PropertyTracker
 		end
 		property = Property.new(document)
 
-		update_query = {'$inc' => {}, '$set' => {}}
+		update_query = {}
 		@properties.each do |p, v|
 			if !property.has_property(p) or force_update_types
+				update_query['$set'] ||= {}
 				update_query['$set']["properties.#{p}.type"] = v.type.to_s
 			end
 			v.to_track_value.each do |v_val|
+				update_query['$inc'] ||= {}
 				update_query['$inc']["properties.#{p}.values.#{v_val}"] = 1
 			end
 		end
