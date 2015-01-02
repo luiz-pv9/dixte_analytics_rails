@@ -12,5 +12,15 @@ describe PropertyTracker do
 			expect(property_tracker.key).to eq('foo#bar')
 		end
 	end
+
+	describe ''
+
+	describe 'saving propreties to the database' do
+		before :each do
+			@collection = MongoHelper.database.collection 'properties'
+		end
+
+		it 'tracks the '
+	end
 end
 
