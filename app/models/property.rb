@@ -30,19 +30,26 @@ class Property
 	end
 
 	def value_count(property, value = nil)
+		status = find_property(property, value)
 		if value
-			status = @data && @data['properties'] && 
-				@data['properties'][property] && 
-				@data['properties'][property]['values'] && 
-				@data['properties'][property]['values'][value]
 			status == nil ? 0 : status
 		else
-			status = @data && @data['properties'] && 
-				@data['properties'][property] && 
-				@data['properties'][property]['values']
 			status == nil ? 0 : status.values.reduce(0) do |memo, val|
 				memo + val
 			end
+		end
+	end
+
+	def find_property(property, value = nil)
+		if value
+			@data && @data['properties'] && 
+				@data['properties'][property] && 
+				@data['properties'][property]['values'] && 
+				@data['properties'][property]['values'][value]
+		else
+			@data && @data['properties'] && 
+				@data['properties'][property] && 
+				@data['properties'][property]['values']
 		end
 	end
 end

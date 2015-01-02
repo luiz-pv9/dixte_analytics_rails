@@ -24,6 +24,7 @@ class PropertyUntracker
 		@properties.each do |prop, val|
 			track_values = val.to_track_value
 			track_values.each do |track_val|
+				next unless property.find_property(prop, track_val)
 				prop_val_count = property.value_count(prop, track_val)
 				if prop_val_count <= 1
 					unset_query['$unset'] ||= {}

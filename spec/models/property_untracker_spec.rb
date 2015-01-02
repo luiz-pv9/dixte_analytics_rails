@@ -64,7 +64,69 @@ describe PropertyUntracker do
 			})
 		end
 
-		it 'removes the property from the properties hash if the counter of all values reaches zero'
-		it 'removes the property document from the database if all values of all properties reaches zero'
+		it 'removes the property from the properties hash if the counter of all values reaches zero' do
+			PropertyTracker.new('foo', {'name' => 'Luiz', 'age' => 20}).save!
+			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
+			expect(@collection.count).to eq(1)
+			doc = @collection.find_one
+			expect(doc).to eq({
+				'_id' => doc['_id'],
+				'key' => 'foo',
+				'properties' => {
+					'age' => {
+						'type' => 'number',
+						'values' => {
+							'*' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'removes the property document from the database if all values of all properties reaches zero' do
+			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
+			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
+			expect(@collection.count).to eq(0)
+		end
+
+		it 'doesnt remove any property if nothing is found to untrack' do
+			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
+			PropertyUntracker.new('foo', {'name' => 'Paulo'}).save!
+			expect(@collection.count).to eq(1)
+			doc = @collection.find_one
+			expect(doc).to eq({
+				'_id' => doc['_id'],
+				'key' => 'foo',
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'untracks each element in the array of values' do
+			PropertyTracker.new('foo', {'name' => %w(Luiz Paulo Foo)}).save!
+			PropertyUntracker.new('foo', {'name' => %w(Foo Luiz Viswanathan)}).save!
+			expect(@collection.count).to eq(1)
+			doc = @collection.find_one
+			expect(doc).to eq({
+				'_id' => doc['_id'],
+				'key' => 'foo',
+				'properties' => {
+					'name' => {
+						'type' => 'array',
+						'values' => {
+							'Paulo' => 1
+						}
+					}
+				}
+			})
+			PropertyUntracker.new('foo', {'name' => %w(Paulo)}).save!
+			expect(@collection.count).to eq(0)
+		end
 	end
 end
