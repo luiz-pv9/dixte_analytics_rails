@@ -4,8 +4,8 @@ class DataDetector
 	@@geolocation_pattern = /^geo\(\d+([\.]\d+)?;\d+([\.]\d+)?\)$/
 
 	class << self
-		# If the value is of a native json type, returns it. If not, returns nil
-		def detect_json_native_type(value)
+		# If the value is of a simple json type, returns it. If not, returns nil
+		def detect_json_simple_type(value)
 			return :boolean if value == true || value == false
 			return :number if value.is_a? Numeric
 			return :string if value.is_a? String
@@ -23,9 +23,9 @@ class DataDetector
 		end
 
 		# Detect type of the specified value.  Current possible values are:
-		# * boolean - true | false (native json format)
-		# * number - float64 (native json format)
-		# * string - any size (native json format)
+		# * boolean - true | false (simple json format)
+		# * number - float64 (simple json format)
+		# * string - any size (simple json format)
 		# * array
 		# * ip
 		# * geolocation
@@ -40,9 +40,9 @@ class DataDetector
 		#              values, not just currency.
 		#		
 		def detect(value)
-			json_native_type = detect_json_native_type value
-			if json_native_type && json_native_type != :string
-				return json_native_type
+			json_simple_type = detect_json_simple_type value
+			if json_simple_type && json_simple_type != :string
+				return json_simple_type
 			end
 
 			return :array if value.is_a? Array

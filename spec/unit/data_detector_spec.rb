@@ -2,32 +2,32 @@ require 'rails_helper'
 require 'data_detector'
 
 describe 'DataDetector specs' do
-	describe '.detect_native_json_type' do
+	describe '.detect_simple_json_type' do
 		it 'detects boolean type' do
-			expect(DataDetector.detect_json_native_type(true)).to eq :boolean
-			expect(DataDetector.detect_json_native_type(false)).to eq :boolean
+			expect(DataDetector.detect_json_simple_type(true)).to eq :boolean
+			expect(DataDetector.detect_json_simple_type(false)).to eq :boolean
 		end
 
 		it 'detects number type' do
-			expect(DataDetector.detect_json_native_type(1)).to eq :number
-			expect(DataDetector.detect_json_native_type(1.412)).to eq :number
-			expect(DataDetector.detect_json_native_type(0)).to eq :number
+			expect(DataDetector.detect_json_simple_type(1)).to eq :number
+			expect(DataDetector.detect_json_simple_type(1.412)).to eq :number
+			expect(DataDetector.detect_json_simple_type(0)).to eq :number
 		end
 
 		it 'detects string type' do
-			expect(DataDetector.detect_json_native_type('what')).to eq :string
-			expect(DataDetector.detect_json_native_type('foo, right?')).to eq :string
-			expect(DataDetector.detect_json_native_type('')).to eq :string
+			expect(DataDetector.detect_json_simple_type('what')).to eq :string
+			expect(DataDetector.detect_json_simple_type('foo, right?')).to eq :string
+			expect(DataDetector.detect_json_simple_type('')).to eq :string
 		end
 
 		it 'doesnt detect array type' do
-			expect(DataDetector.detect_json_native_type([])).to eq nil
-			expect(DataDetector.detect_json_native_type(['right'])).to eq nil
+			expect(DataDetector.detect_json_simple_type([])).to eq nil
+			expect(DataDetector.detect_json_simple_type(['right'])).to eq nil
 		end
 
 		it 'doesnt detect object type' do
-			expect(DataDetector.detect_json_native_type({})).to eq nil
-			expect(DataDetector.detect_json_native_type({'a' => 10})).to eq nil
+			expect(DataDetector.detect_json_simple_type({})).to eq nil
+			expect(DataDetector.detect_json_simple_type({'a' => 10})).to eq nil
 		end
 	end
 
@@ -50,17 +50,17 @@ describe 'DataDetector specs' do
 	end
 
 	describe '.detect' do
-		it 'detects json native boolean' do
+		it 'detects json simple boolean' do
 			expect(DataDetector.detect(true)).to eq :boolean
 			expect(DataDetector.detect(false)).to eq :boolean
 		end
 
-		it 'detects json native number' do
+		it 'detects json simple number' do
 			expect(DataDetector.detect(12.51)).to eq :number
 			expect(DataDetector.detect(0)).to eq :number
 		end
 
-		it 'detects json native string' do
+		it 'detects json simple string' do
 			expect(DataDetector.detect('12.51')).to eq :string
 			expect(DataDetector.detect('0')).to eq :string
 		end

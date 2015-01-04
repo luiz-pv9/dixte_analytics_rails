@@ -1,42 +1,85 @@
-# The Querier class is responsible for cleaning a query with any 
-# format
+require 'data_detector'
+
 class Querier
 	attr_accessor :query, :config
 
-	def initialize(query, config = {})
-		@config = config
+	def initialize(query, config)
 		@query = query
+		@config = config
+	end
+	
+	# This needs to be implemented by the subclasses
+	def clean
+	end
+
+	class << self
+		def match_value(placeholder, value)
+			# Array type
+			if placeholder.is_a? Array
+				return false unless value.is_a? Array
+				matched_count = 0
+				placeholder.each do |p_val|
+					value.each do |v_val|
+						matched_count += 1 if match_value(p_val, v_val)
+					end
+				end
+				return matched_count == value.size
+			end
+
+			# Hash type
+			if placeholder.is_a? Hash
+				# If the placeholder is a hash, it MUST have size = 1
+				return false unless value.is_a? Hash
+				any_of_key_matched = false
+				any_of_value_matched = false
+				placeholder.each do |p_key, p_val|
+					value.each do |v_key, v_val|
+						any_of_key_matched = true if match_value(p_key, v_key)
+						any_of_value_matched = true if match_value(p_val, v_val)
+					end
+				end
+				return any_of_value_matched && any_of_key_matched
+			end
+
+			# Native types
+			if placeholder.is_a?(String) || placeholder.is_a?(Numeric) || placeholder == true || placeholder == false
+				return placeholder == value
+			end
+
+			# Symbol types
+			return value.is_a?(String) if placeholder == :json_string_value
+			return value.is_a?(Numeric) if placeholder == :json_numeric_value
+			return (value == true || value == false) if placeholder == :json_boolean_value
+
+			# Simple types
+			return DataDetector.detect_json_simple_type(value) if placeholder == :json_simple_value
+		end
+	end
+end
+
+class HashQuerier < Querier
+	def initialize(query, config)
+		super(query, config)
 	end
 
 	def clean
-		cleaned = clean_root
-		# `e` can be the index if the query is an array or
-		# the key if the query is a hash
-		each do |val, e|
-		end
-		cleaned
-	end
-
-	def clean_root
-		return @query if @query.is_a? @config[:root]
-		return @config[:root].new
-	end
-
-	def each_array(s_query = @query, &block)
-		s_query.each(&block)
-	end
-
-	def each_hash(s_query = @query, &block)
-		s_query.each do |key, val|
-			block.call val, key
+		return {} unless @query.is_a? Hash
+		@query.each do |key, val|
+			@config[:allowed].each do |pattern|
+				# TODO
+				if @config[:multiple_operations]
+				else
+				end
+			end
 		end
 	end
+end
 
-	def each(s_query = @query, &block)
-		if @query.is_a? Array
-			each_array s_query, &block
-		elsif @query.is_a? Hash
-			each_hash s_query, &block
-		end
+class ArrayQuerier < Querier
+	def initialize(query, config)
+		super(query, config)
+	end
+
+	def clean
 	end
 end
