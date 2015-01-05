@@ -65,11 +65,15 @@ class HashQuerier < Querier
 	def clean
 		return {} unless @query.is_a? Hash
 		@query.each do |key, val|
+			match_count = 0
 			@config[:allowed].each do |pattern|
-				# TODO
-				if @config[:multiple_operations]
-				else
-				end
+				match_count += 1 if Querier.match_value(pattern, val)
+			end
+
+			if val.is_a?(Hash) || val.is_a?(Array)
+				@query.delete(key) unless match_count == val.size
+			else
+				@query.delete(key) unless match_count == 1
 			end
 		end
 	end
@@ -81,5 +85,11 @@ class ArrayQuerier < Querier
 	end
 
 	def clean
+		return [] unless @query.is_a? Array
+		cleaned = []
+		@query.each do |elm, index|
+			cleaned << HashQuerier.new(elm, @config).clean
+		end
+		cleaned.select { |e| e.size > 0 }
 	end
 end

@@ -113,7 +113,6 @@ describe Querier do
 		describe 'cleaning' do
 			before :each do
 				@query = HashQuerier.new({}, {
-					:multiple_operations => true,
 					:allowed => [
 						:json_string_value,
 						{'$eq' => :json_simple_value},
@@ -131,10 +130,54 @@ describe Querier do
 			it 'removes values not specified in the allowed list' do
 				@query.query = {'name' => 'Luiz', 'age' => {'$gt' => 20}}
 				expect(@query.clean).to eq({'name' => 'Luiz', 'age' => {'$gt' => 20}})
+
+				@query.query = {'name' => 'Luiz', 'age' => {'$gt' => 20, '$ne' => 25}}
+				expect(@query.clean).to eq({'name' => 'Luiz', 'age' => {'$gt' => 20, '$ne' => 25}})
+
+				@query.query = {'name' => 'Luiz', 'age' => {'$gt' => 20, 'foo' => 25}}
+				expect(@query.clean).to eq({'name' => 'Luiz'})
 			end
 		end
 	end
 
 	describe 'ArrayQuerier' do
+		describe 'cleaning' do
+			before :each do
+				@query = ArrayQuerier.new({}, {
+					:allowed => [
+						:json_string_value,
+						{'$eq' => :json_simple_value},
+						{'$ne' => :json_simple_value},
+						{'$gt' => :json_numeric_value}
+					]
+				})
+			end
+
+			it 'returns an empty array if the query is not an array' do
+				@query.query = 10
+				expect(@query.clean).to eq([])
+			end
+
+			it 'removes values not specifie in the allowed list' do
+				@query.query = [
+					{'name' => 'Luiz'},
+					{'age' => {'$gt' => 20}}
+				]
+				expect(@query.clean).to eq([
+					{'name' => 'Luiz'},
+					{'age' => {'$gt' => 20}}
+				])
+
+				@query.query = [
+					{'name' => 'Luiz'},
+					{'age' => {'$gt' => 20, 'foo' => 'bar'}},
+					{'address' => 'foobar', 'age' => {'$gt' => 20}}
+				]
+				expect(@query.clean).to eq([
+					{'name' => 'Luiz'},
+					{'address' => 'foobar', 'age' => {'$gt' => 20}}
+				])
+			end
+		end
 	end
 end
