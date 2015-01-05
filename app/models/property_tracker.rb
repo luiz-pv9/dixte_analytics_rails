@@ -1,6 +1,7 @@
 require 'tracking_value'
 require 'property_key'
 
+# The PropertyTracker class is responsible for storing properties in the database
 class PropertyTracker
 	attr_reader :key, :properties
 	@@collection = MongoHelper.database.collection 'properties'
@@ -34,4 +35,6 @@ class PropertyTracker
 		end
 		@@collection.update({'key' => @key}, update_query)
 	end
+
+	alias_method :track!, :save!
 end

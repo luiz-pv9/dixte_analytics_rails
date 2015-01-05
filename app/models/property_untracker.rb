@@ -49,4 +49,6 @@ class PropertyUntracker
 			@@collection.update({'key' => @key}, unset_query) if unset_query.size > 0
 		end
 	end
+
+	alias_method :untrack!, :save!
 end
