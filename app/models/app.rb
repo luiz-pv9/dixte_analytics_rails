@@ -3,4 +3,11 @@
 # helps with common operations (creating, editing, deleting).
 class App
 	include Mongoid::Document
+	include Tokenable
+
+	# Fields
+	field :name, :type => String
+
+	# Validation
+	validates_presence_of :name
 end
