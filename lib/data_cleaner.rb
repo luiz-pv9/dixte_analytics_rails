@@ -12,7 +12,9 @@ class DataCleaner
 				end
 
 				if val.is_a?(Hash)
-					clean.delete(key) unless match_count == val.size
+					if match_count != val.size || match_count == 0
+						clean.delete(key)
+					end
 				else
 					clean.delete(key) unless match_count == 1
 				end

@@ -8,6 +8,9 @@ class App
 	# Fields
 	field :name, :type => String
 
+	# Relations
+	has_many :warns
+
 	# Validation
 	validates_presence_of :name
 end

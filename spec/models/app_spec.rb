@@ -20,6 +20,11 @@ describe App do
 	describe 'users ownership' do
 	end
 
+	describe 'warns' do
+		it 'has many warns'
+		it 'removes warns based on creation time'
+	end
+
 	describe 'token generation' do
 		it 'generates an unique token upon creation' do
 			app = App.new :name => 'Dixte'
