@@ -26,8 +26,8 @@ class ProfileTracker
 		return true
 	end
 
-	def clean_properties(data)
-		DataCleaner.clean_hash(data, [
+	def clean_properties(properties)
+		DataCleaner.clean_hash(properties, [
 			:json_simple_value,
 			[:json_string_value]
 		])
@@ -36,11 +36,11 @@ class ProfileTracker
 	def check_properties(data, app)
 		cleaned_properties = clean_properties(data['properties'])
 
-		if cleaned_properties.size == data['properties'].size
-			return true
-		else
+		unless cleaned_properties.size == data['properties'].size
 			generate_not_tracked_warn(data, app)
+			return false
 		end
+		return true
 	end
 
 	def find_app(data)
