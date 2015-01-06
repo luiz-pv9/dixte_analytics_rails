@@ -15,8 +15,8 @@ describe PropertyUntracker do
 
 	describe '.save! (untracking)' do
 		before :each do
-			@collection = MongoHelper.database.collection 'properties'
-			@collection.remove({})
+			@collection = Mongoid::Sessions.default['properties']
+			@collection.find({}).remove_all
 		end
 
 		it 'decrements the counter of a property if it is greater than one' do
@@ -25,8 +25,8 @@ describe PropertyUntracker do
 
 			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
 
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -48,8 +48,8 @@ describe PropertyUntracker do
 			
 			PropertyUntracker.new('foo', {'name' => 'Paulo'}).save!
 
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -67,8 +67,8 @@ describe PropertyUntracker do
 		it 'removes the property from the properties hash if the counter of all values reaches zero' do
 			PropertyTracker.new('foo', {'name' => 'Luiz', 'age' => 20}).save!
 			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -86,14 +86,14 @@ describe PropertyUntracker do
 		it 'removes the property document from the database if all values of all properties reaches zero' do
 			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
 			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
-			expect(@collection.count).to eq(0)
+			expect(@collection.find.count).to eq(0)
 		end
 
 		it 'doesnt remove any property if nothing is found to untrack' do
 			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
 			PropertyUntracker.new('foo', {'name' => 'Paulo'}).save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -111,8 +111,8 @@ describe PropertyUntracker do
 		it 'untracks each element in the array of values' do
 			PropertyTracker.new('foo', {'name' => %w(Luiz Paulo Foo)}).save!
 			PropertyUntracker.new('foo', {'name' => %w(Foo Luiz Viswanathan)}).save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -126,7 +126,7 @@ describe PropertyUntracker do
 				}
 			})
 			PropertyUntracker.new('foo', {'name' => %w(Paulo)}).save!
-			expect(@collection.count).to eq(0)
+			expect(@collection.find.count).to eq(0)
 		end
 	end
 end

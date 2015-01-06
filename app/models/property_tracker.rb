@@ -2,9 +2,12 @@ require 'tracking_value'
 require 'property_key'
 
 # The PropertyTracker class is responsible for storing properties in the database
+#
+# Everything that needs to have a better performance and absolute control of 
+# the queries sent to MongoDB, the Moped driver is used instead of the Mongoid.
 class PropertyTracker
 	attr_reader :key, :properties
-	@@collection = MongoHelper.database.collection 'properties'
+	@@collection = Mongoid::Sessions.default['properties']
 
 	def initialize(key, properties)
 		@key = PropertyKey.normalize(key)
@@ -15,7 +18,7 @@ class PropertyTracker
 	end
 
 	def save!(force_update_types = false)
-		document = @@collection.find_one(:key => @key)
+		document = @@collection.find(:key => @key).first
 		unless document
 			document = {'key' => @key, 'properties' => {}}
 			@@collection.insert(document)
@@ -33,7 +36,7 @@ class PropertyTracker
 				update_query['$inc']["properties.#{p}.values.#{v_val}"] = 1
 			end
 		end
-		@@collection.update({'key' => @key}, update_query)
+		@@collection.find({'key' => @key}).update(update_query)
 	end
 
 	alias_method :track!, :save!

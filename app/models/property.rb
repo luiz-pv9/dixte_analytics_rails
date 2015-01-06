@@ -5,6 +5,10 @@
 class Property
 	attr_reader :data
 
+	# Since the Property wrapper is used in both PropertyTracker and
+	# PropertyUntracker, the code for indexing the collection is placed here.
+	Mongoid::Sessions.default['properties'].indexes.create({:key => 1}, {:unique => true})
+
 	def initialize(data)
 		@data = data
 	end

@@ -24,11 +24,7 @@ gem 'sdoc', '~> 0.4.0',          group: :doc
 # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
 gem 'spring',        group: :development
 
-# MongoDB driver
-gem 'mongo', '~> 1.11.1'
-
-# Native BSON library for faster parsing
-gem 'bson_ext', '~> 1.11.1'
+gem 'mongoid', '~> 4.0.0'
 
 gem 'sidekiq', '~> 3.3.0'
 

@@ -3,7 +3,7 @@ require 'property_key'
 
 class PropertyUntracker
 	attr_reader :key, :properties
-	@@collection = MongoHelper.database.collection 'properties'
+	@@collection = Mongoid::Sessions.default['properties']
 
 	def initialize(key, properties)
 		@key = PropertyKey.normalize(key)
@@ -14,7 +14,7 @@ class PropertyUntracker
 	end
 
 	def save!
-		document = @@collection.find_one(:key => @key)
+		document = @@collection.find(:key => @key).first
 		return -1 unless document
 		property = Property.new(document)
 		update_query = {}
@@ -43,10 +43,10 @@ class PropertyUntracker
 		end
 
 		if total_count == 0
-			@@collection.remove({'key' => @key})
+			@@collection.find({'key' => @key}).remove()
 		else
-			@@collection.update({'key' => @key}, update_query) if update_query.size > 0
-			@@collection.update({'key' => @key}, unset_query) if unset_query.size > 0
+			@@collection.find({'key' => @key}).update(update_query) if update_query.size > 0
+			@@collection.find({'key' => @key}).update(unset_query) if unset_query.size > 0
 		end
 	end
 

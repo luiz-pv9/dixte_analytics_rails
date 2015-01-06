@@ -17,15 +17,15 @@ describe PropertyTracker do
 
 	describe 'saving propreties to the database' do
 		before :each do
-			@collection = MongoHelper.database.collection 'properties'
-			@collection.remove({})
+			@collection = Mongoid::Sessions.default['properties']
+			@collection.find({}).remove_all
 		end
 
 		it 'tracks the specified properties and persists it to the database' do
 			property_tracker = PropertyTracker.new 'foo', {'name' => 'Luiz'}
 			property_tracker.save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -40,11 +40,11 @@ describe PropertyTracker do
 			})
 		end
 
-		it 'increments the counter if the property is already registered' do
+		it 'increments the find.counter if the property is already registered' do
 			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
 			PropertyTracker.new('foo', {'name' => 'Luiz', 'synced' => false}).save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -65,11 +65,11 @@ describe PropertyTracker do
 			})
 		end
 
-		it 'increments the counter of different values for the same proprety' do
+		it 'increments the find.counter of different values for the same proprety' do
 			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
 			PropertyTracker.new('foo', {'name' => 'Paulo'}).save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -87,8 +87,8 @@ describe PropertyTracker do
 
 		it 'tracks values inside the array in a single property' do
 			PropertyTracker.new('foo', {'name' => ['Luiz', 'Paulo']}).save!
-			expect(@collection.count).to eq(1)
-			doc = @collection.find_one
+			expect(@collection.find.count).to eq(1)
+			doc = @collection.find.first
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
