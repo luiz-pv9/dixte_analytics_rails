@@ -1,5 +1,8 @@
 require 'rails_helper'
+require 'sidekiq/testing'
 require 'base64'
+
+Sidekiq::Testing.fake!
 
 describe EventReceiverController do
 	describe 'track' do
@@ -27,6 +30,13 @@ describe EventReceiverController do
 			data = {'foo' => 'bar'}.to_json
 			post :track, {:data => 'what' + Base64.encode64(data)}
 			expect(response.body).to eq('0')
+		end
+
+		it 'enqueues the requested data to be processed by the tracker' do
+			expect {
+				data = {'foo' => 'bar'}.to_json
+				post :track, {:data => Base64.encode64(data)}
+			}.to change(EventTracker.jobs, :size).by(1)
 		end
 	end
 end

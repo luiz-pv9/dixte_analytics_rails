@@ -8,6 +8,7 @@ class EventReceiverController < ApplicationController
 			@json_data = Base64.decode64 @raw_data
 			begin
 				@data = JSON.parse(@json_data)
+				EventTracker.perform_async(@data)
 				render :text => '1'
 			rescue JSON::ParserError => e
 				render :text => '0'

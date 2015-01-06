@@ -30,6 +30,8 @@ gem 'mongo', '~> 1.11.1'
 # Native BSON library for faster parsing
 gem 'bson_ext', '~> 1.11.1'
 
+gem 'sidekiq', '~> 3.3.0'
+
 group :development, :test do
 	gem 'rspec-rails', '~> 3.1.0'
 end
