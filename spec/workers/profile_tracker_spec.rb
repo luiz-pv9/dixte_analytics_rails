@@ -1,21 +1,29 @@
 require 'rails_helper'
 
 describe ProfileTracker do
-	describe '.clean' do
-		it 'cleans the profile' do
-			profile = {'name' => 'Luiz Paulo', 'age' => 20, 'colors' => ['red'],
-				'removed' => {}}
-			cleaned = ProfileTracker.clean(profile)
-			expect(cleaned).to eq(
-				{'name' => 'Luiz Paulo', 'age' => 20, 'colors' => ['red']}
-			)
-		end
+
+	def valid_app
+		App.create :name => 'Dixte'
+	end
+
+	def valid_app_token
+		valid_app.token
+	end
+
+	before :each do
+		App.delete_all
+		@profile_tracker = ProfileTracker.new
+	end
+
+	it 'returns -1 if the app_token is not present in the data' do
+		expect(@profile_tracker.perform({'foo' => 'bar'})).to be(-1)
 	end
 
 	describe 'warning generation on bad formatted profiles' do
 		it 'generates a warn if any property were removed in the cleaning process'
-		it 'generates a different warn if all properties were removed'
-		it ''
+		it 'generates a warn if the properties hash is not present in the data'
+		it 'generates a warn if the external_id is not present in the data'
+		it 'generates a warn if the properties has invalid attributes'
 	end
 
 	describe 'storing the profile'

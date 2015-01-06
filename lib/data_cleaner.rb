@@ -21,6 +21,10 @@ class DataCleaner
 			end
 		end
 
+		def is_hash_cleaned(hash, allowed)
+			hash.size == clean_hash(hash, allowed).size
+		end
+
 		def clean_array(array, allowed)
 			return [] unless array.is_a? Array
 			cleaned = []
@@ -28,6 +32,10 @@ class DataCleaner
 				cleaned << clean_hash(elm, allowed)
 			end
 			cleaned.select { |e| e.size > 0 }
+		end
+
+		def is_array_cleaned(array, allowed)
+			array.size == clean_array(array, allowed).size
 		end
 	end
 end
