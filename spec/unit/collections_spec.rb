@@ -27,4 +27,9 @@ describe Collections do
 		expect(Collections::Warns.name).to eq(:warns)
 		expect(Collections::Warns.collection).to be_truthy
 	end
+
+	it 'has the events collection' do
+		expect(Collections::Events.name).to eq(:events)
+		expect(Collections::Events.collection).to be_truthy
+	end
 end

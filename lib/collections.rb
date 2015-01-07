@@ -24,6 +24,15 @@ module Collections
 		end
 	end
 
+	class Events < CollectionDefinition
+		@name = :events
+		Mongoid::Sessions.default[@name].indexes.create({:app_token => 1, :type => 1}, {:unique => true})
+		Mongoid::Sessions.default[@name].indexes.create({:app_token => 1, :external_id => 1}, {:unique => true})
+		class << self
+			attr_reader :name
+		end
+	end
+
 	class Apps < CollectionDefinition
 		@name = :apps
 		# The token is already indexed by the tokeanble concern
