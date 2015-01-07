@@ -35,6 +35,7 @@ class JSONMatcher
 			end
 
 			# Symbol types
+			return value.nil? if pattern == :json_null_value
 			return value.is_a?(String) if pattern == :json_string_value
 			return value.is_a?(Numeric) if pattern == :json_numeric_value
 			return (value == true || value == false) if pattern == :json_boolean_value

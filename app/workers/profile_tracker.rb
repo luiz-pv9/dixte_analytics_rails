@@ -39,6 +39,7 @@ class ProfileTracker
 	def clean_properties(properties)
 		DataCleaner.clean_hash(properties, [
 			:json_simple_value,
+			:json_null_value,
 			[:json_string_value]
 		])
 	end
@@ -66,15 +67,78 @@ class ProfileTracker
 				prop_to_increment = prop.sub('$inc.', '')
 				query['$inc'] ||= {}
 				query['$inc']["properties.#{prop_to_increment}"] = val
-			elsif prop.index('$append.') == 0
-				prop_to_increment = prop.sub('$append.', '')
+			elsif prop.index('$push.') == 0
+				prop_to_increment = prop.sub('$push.', '')
 				query['$push'] ||= {}
 				query['$push']["properties.#{prop_to_increment}"] = val
+			elsif prop.index('$pull.') == 0
+				prop_to_increment = prop.sub('$pull.', '')
+				query['$pull'] ||= {}
+				query['$pull']["properties.#{prop_to_increment}"] = val
 			else
 				query['$set'] ||= {}
 				query['$set']["properties.#{prop}"] = val
 			end
 		end
+	end
+
+	def track_update_properties(data, query)
+		untrack = {}
+		track = {}
+		if query['$set']
+			query['$set'].each do |key, val|
+				prop = key.sub('properties.', '')
+				track[prop] = val
+				if data['properties'][prop]
+					untrack[prop] = data['properties'][prop]
+				end
+			end
+		end
+
+		if query['$unset']
+			query['$unset'].each do |key, val|
+				prop = key.sub('properties.', '')
+				untrack[prop] = data['properties'][prop]
+			end
+		end
+
+		if query['$push']
+			query['$push'].each do |key, val|
+				prop = key.sub('properties.', '')
+				track[prop] = val
+			end
+		end
+
+		if query['$pull']
+			query['$pull'].each do |key, val|
+				prop = key.sub('properties.', '')
+				untrack[prop] = val
+			end
+		end
+
+		if query['$inc']
+			query['$inc'].each do |key, val|
+				prop = key.sub('properties.', '')
+				# Only track an increment operation if the previous value didnt
+				# exist
+				unless data['properties'][prop]
+					track[prop] = val
+				end
+			end
+		end
+
+		if track.size > 0
+			PropertyTracker.new(data['app_token'], track).track!
+		end
+
+		if untrack.size > 0
+			PropertyUntracker.new(data['app_token'], untrack).untrack!
+		end
+	end
+
+	def track_insert_properties(data)
+		property_tracker = PropertyTracker.new(data['app_token'], data['properties'])
+		property_tracker.track!
 	end
 
 	def track_profile(data)
@@ -92,11 +156,13 @@ class ProfileTracker
 				update_track_query(query, prop, val)
 			end
 
+			track_update_properties(profile, query)
 			query['$set'] ||= {}
 			query['$set']['updated_at'] = data['updated_at'] || Time.now.to_i
 
 			@@collection.find(find_query).update(query)
 		else
+			track_insert_properties(data)
 			data['created_at'] ||= Time.now.to_i
 			data['updated_at'] ||= data['created_at']
 			data['_id'] = @@collection.insert(data)

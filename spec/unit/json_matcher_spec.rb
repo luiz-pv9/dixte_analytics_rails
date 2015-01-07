@@ -46,6 +46,26 @@ describe JSONMatcher do
 			expect(JSONMatcher.matches(:json_simple_value, [])).to be_falsy
 		end
 
+		it 'matches hash type' do
+			expect(JSONMatcher.matches(:json_hash_value, {})).to be_truthy
+			expect(JSONMatcher.matches(:json_hash_value, {'a' => 'b'})).to be_truthy
+			expect(JSONMatcher.matches(:json_hash_value, [])).to be_falsy
+			expect(JSONMatcher.matches(:json_hash_value, 'foo')).to be_falsy
+		end
+
+		it 'matches array type' do
+			expect(JSONMatcher.matches(:json_array_value, [])).to be_truthy
+			expect(JSONMatcher.matches(:json_array_value, ['a', 'b'])).to be_truthy
+			expect(JSONMatcher.matches(:json_array_value, {})).to be_falsy
+			expect(JSONMatcher.matches(:json_array_value, {'a' => 'b'})).to be_falsy
+		end
+
+		it 'matches null type' do
+			expect(JSONMatcher.matches(:json_null_value, nil)).to be_truthy
+			expect(JSONMatcher.matches(:json_null_value, 0)).to be_falsy
+			expect(JSONMatcher.matches(:json_null_value, [])).to be_falsy
+		end
+
 		it 'matches hash expressions' do
 			match = JSONMatcher.matches(
 				{:json_string_value => :json_numeric_value},

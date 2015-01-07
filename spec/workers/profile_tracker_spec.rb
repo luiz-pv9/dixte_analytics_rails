@@ -15,7 +15,9 @@ describe ProfileTracker do
 		Warn.delete_all
 		@profile_tracker = ProfileTracker.new
 		@profiles = Mongoid::Sessions.default['profiles']
+		@properties = Mongoid::Sessions.default['properties']
 		@profiles.find().remove_all
+		@properties.find().remove_all
 	end
 
 	it 'returns -1 if the app_token is not present in the data' do
@@ -52,22 +54,22 @@ describe ProfileTracker do
 		end
 
 		it 'generates a warn if any root property were removed in the cleaning process' do
-			# app = valid_app
-			# expect {
-			# 	@profile_tracker.perform({
-			# 		'app_token' => app.token,
-			# 		'external_id' => 2015,
-			# 		'properties' => {}
-			# 	})
-			# }.to change { Warn.all.count }.by(1)
-			# warn = Warn.first
-			# expect(warn.level).to eq(Warn::MEDIUM)
-			# expect(warn.app).to eq(app)
-			# expect(warn.data).to eq({
-			# 	'app_token' => app.token,
-			# 	'external_id' => 2015,
-			# 	'properties' => {}
-			# })
+			app = valid_app
+			expect {
+				@profile_tracker.perform({
+					'app_token' => app.token,
+					'external_id' => 2015,
+					'properties' => {}
+				})
+			}.to change { Warn.all.count }.by(1)
+			warn = Warn.first
+			expect(warn.level).to eq(Warn::MEDIUM)
+			expect(warn.app).to eq(app)
+			expect(warn.data).to eq({
+				'app_token' => app.token,
+				'external_id' => 2015,
+				'properties' => {}
+			})
 		end
 
 		it 'generates a warn if the properties has invalid attributes' do
@@ -134,14 +136,379 @@ describe ProfileTracker do
 			expect(profile['updated_at']).to eq(123456)
 		end
 
-		it 'updates updated_at when updating the profile'
-		it 'increments a value with the special increment attribute'
-		it 'creates the value with the increment operation if no value is found'
-		it 'appends a value to a list with the special append atttribute'
-		it 'creates the list with the append operation if no list is found'
+		it 'updates updated_at when updating the profile' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo'
+				}
+			})
+			profile = nil
+			expect {
+				profile = @profile_tracker.perform({
+					'app_token' => app_token,
+					'external_id' => 'lpvasco',
+					'properties' => {
+						'name' => 'Luiz Paulo'
+					}
+				})
+			}.to change { @profiles.find.count }.by(0)
+			profile = @profiles.find.first
+			expect(profile['created_at']).to eq(123456)
+			expect(profile['updated_at']).not_to eq(123456)
+		end
+
+		it 'increments a value with the special increment attribute' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'visit_count' => 2
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$inc.visit_count' => 3
+				}
+			})
+			profile = @profiles.find.first
+			expect(profile['properties']['visit_count']).to eq(5)
+		end
+
+		it 'creates the value with the increment operation if no value is found' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo'
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$inc.Visit Count' => 3
+				}
+			})
+			profile = @profiles.find.first
+			expect(profile['properties']['Visit Count']).to eq(3)
+		end
+
+		it 'appends a value to a list with the special append atttribute' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$push.colors' => 'yellow'
+				}
+			})
+			profile = @profiles.find.first
+			expect(profile['properties']['colors']).to eq(['red', 'blue', 'yellow'])
+		end
+
+		it 'creates the list with the append operation if no list is found' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo'
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$push.colors' => 'yellow'
+				}
+			})
+			profile = @profiles.find.first
+			expect(profile['properties']['colors']).to eq(['yellow'])
+		end
+
+		it 'removes a value from a list using the $pull operator' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$pull.colors' => 'red'
+				}
+			})
+			profile = @profiles.find.first
+			expect(profile['properties']['colors']).to eq(['blue'])
+		end
+
+		it 'removes a property if the specified value is null' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'colors' => nil
+				}
+			})
+			profile = @profiles.find.first
+			expect(profile['properties']['colors']).to be_nil
+		end
 	end
 
-	describe 'incrementing a property in a profile'
-	describe 'appending a value in a property in a profile'
-	describe 'tracking properties (PropertyTracker usage)'
+	describe 'tracking properties (PropertyTracker usage)' do
+		it 'tracks all properties when creating the profile' do
+			app_token = valid_app_token
+			expect {
+				@profile_tracker.perform({
+					'app_token' => app_token,
+					'external_id' => 'lpvasco',
+					'created_at' => 123456,
+					'properties' => {
+						'name' => 'Luiz Paulo',
+						'age' => 21,
+						'colors' => ['red', 'blue']
+					}
+				})
+			}.to change { @properties.find.count }.by(1)
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app_token,
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz Paulo' => 1
+						}
+					},
+					'age' => {
+						'type' => 'number',
+						'values' => {
+							'*' => 1
+						}
+					},
+					'colors' => {
+						'type' => 'array',
+						'values' => {
+							'red' => 1,
+							'blue' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'untrack previous value and track new one when updating a value' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo'
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo Vasconcellos'
+				}
+			})
+
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app_token,
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz Paulo Vasconcellos' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'untrack previous value when removing the previous' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'age' => 20
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'age' => nil
+				}
+			})
+
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app_token,
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz Paulo' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'tracks a new value when pushing a new value to the array' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'colors' => ['red', 'blue']
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'$push.colors' => 'yellow'
+				}
+			})
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app_token,
+				'properties' => {
+					'colors' => {
+						'type' => 'array',
+						'values' => {
+							'red' => 1,
+							'blue' => 1,
+							'yellow' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'untrack values when pulling from array of values' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'colors' => ['red', 'blue']
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'$pull.colors' => 'blue'
+				}
+			})
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app_token,
+				'properties' => {
+					'colors' => {
+						'type' => 'array',
+						'values' => {
+							'red' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'tracks a new value when incrementing a value that doesnt exists' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz'
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'$inc.age' => 3
+				}
+			})
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app_token,
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz' => 1
+						}
+					},
+					'age' => {
+						'type' => 'number',
+						'values' => {
+							'*' => 1
+						}
+					}
+				}
+			})
+		end
+	end
 end
