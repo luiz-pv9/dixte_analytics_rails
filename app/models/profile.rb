@@ -1,6 +1,10 @@
+require 'collections'
+
 class Profile
 	include Mongoid::Document
 	include Mongoid::Timestamps
+
+	store_in :collection => Collections::Profiles.name
 
 	before_create :check_properties
 

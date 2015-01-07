@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'collections'
 
 describe ProfileTracker do
 
@@ -14,8 +15,8 @@ describe ProfileTracker do
 		App.delete_all
 		Warn.delete_all
 		@profile_tracker = ProfileTracker.new
-		@profiles = Mongoid::Sessions.default['profiles']
-		@properties = Mongoid::Sessions.default['properties']
+		@profiles = Collections::Profiles.collection
+		@properties = Collections::Properties.collection
 		@profiles.find().remove_all
 		@properties.find().remove_all
 	end

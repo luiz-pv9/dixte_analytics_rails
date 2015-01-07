@@ -1,11 +1,12 @@
 require 'data_cleaner'
 require 'hash_param'
+require 'collections'
 
 class ProfileTracker
 	include Sidekiq::Worker
 
 	@@necessary_keys = ['app_token', 'properties', 'external_id']
-	@@collection = Mongoid::Sessions.default['profiles']
+	@@collection = Collections::Profiles.collection
 
 	def generate_not_tracked_warn(data, app)
 		Warn.create({

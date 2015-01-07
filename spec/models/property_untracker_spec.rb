@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'collections'
 
 describe PropertyUntracker do
 	describe 'instantiating' do
@@ -15,7 +16,7 @@ describe PropertyUntracker do
 
 	describe '.save! (untracking)' do
 		before :each do
-			@collection = Mongoid::Sessions.default['properties']
+			@collection = Collections::Properties.collection
 			@collection.find({}).remove_all
 		end
 

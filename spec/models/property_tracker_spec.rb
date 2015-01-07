@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'collections'
 
 describe PropertyTracker do
 	describe 'instantiating with an array as the key' do
@@ -15,7 +16,7 @@ describe PropertyTracker do
 	
 	describe 'saving propreties to the database' do
 		before :each do
-			@collection = Mongoid::Sessions.default['properties']
+			@collection = Collections::Properties.collection
 			@collection.find({}).remove_all
 		end
 

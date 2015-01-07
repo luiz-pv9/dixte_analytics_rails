@@ -1,9 +1,10 @@
 require 'tracking_value'
 require 'property_key'
+require 'collections'
 
 class PropertyUntracker
 	attr_reader :key, :properties
-	@@collection = Mongoid::Sessions.default['properties']
+	@@collection = Collections::Properties.collection
 
 	def initialize(key, properties)
 		@key = PropertyKey.normalize(key)

@@ -1,3 +1,4 @@
+require 'collections'
 require 'tracking_value'
 require 'property_key'
 
@@ -7,7 +8,7 @@ require 'property_key'
 # the queries sent to MongoDB, the Moped driver is used instead of the Mongoid.
 class PropertyTracker
 	attr_reader :key, :properties
-	@@collection = Mongoid::Sessions.default['properties']
+	@@collection = Collections::Properties.collection
 
 	def initialize(key, properties)
 		@key = PropertyKey.normalize(key)

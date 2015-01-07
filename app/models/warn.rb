@@ -1,6 +1,10 @@
+require 'collections'
+
 class Warn
 	include Mongoid::Document
 	include Mongoid::Timestamps
+
+	store_in :collection => Collections::Warns.name
 
 	# Warn levels
 	LOW = 0
