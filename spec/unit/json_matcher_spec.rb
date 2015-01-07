@@ -50,7 +50,7 @@ describe JSONMatcher do
 			match = JSONMatcher.matches(
 				{:json_string_value => :json_numeric_value},
 				{'foobar' => 20})
-			expect(match).to be(true)
+			expect(match).to eq(['foobar'])
 
 			match = JSONMatcher.matches(
 				{:json_string_value => :json_numeric_value},
@@ -60,7 +60,7 @@ describe JSONMatcher do
 			match = JSONMatcher.matches(
 				{'$ne' => :json_simple_value},
 				{'$ne' => 'qux'})
-			expect(match).to be(true)
+			expect(match).to eq(['$ne'])
 
 			match = JSONMatcher.matches(
 				{'$ne' => :json_simple_value},
@@ -72,11 +72,24 @@ describe JSONMatcher do
 			match = JSONMatcher.matches(
 				{:json_string_value => {'foo' => :json_numeric_value}},
 				{'foobar' => {'foo' => 20}})
-			expect(match).to be(true)
+			expect(match).to eq(['foobar'])
 
 			match = JSONMatcher.matches(
 				{:json_string_value => {'foo' => :json_numeric_value}},
 				{'foobar' => {'qux' => 20}})
+			expect(match).to be(false)
+		end
+
+		it 'matches hash expression only to the key/pair value' do
+			match = JSONMatcher.matches(
+				{'a' => :json_numeric_value, 'b' => :json_string_value},
+				{'a' => 10})
+
+			expect(match).to eq(['a'])
+			
+			match = JSONMatcher.matches(
+				{'a' => :json_numeric_value, 'b' => :json_string_value},
+				{'a' => 'foo'})
 			expect(match).to be(false)
 		end
 

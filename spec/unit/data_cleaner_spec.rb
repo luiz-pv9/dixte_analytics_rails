@@ -40,6 +40,20 @@ describe DataCleaner do
 		end
 	end
 
+	describe 'clean_root_hash' do
+		it 'applies cleaning rules to the root hash' do
+			allowed = [
+				{'app_token' => :json_string_value},
+				{'created_at' => :json_numeric_value}
+			]
+			query = {'app_token' => 'foo', 'created_at' => 123, 'updated_at' => 123}
+			expect(DataCleaner.clean_root_hash(query, allowed)).to eq({
+				'app_token' => 'foo',
+				'created_at' => 123
+			})
+		end
+	end
+
 	describe 'clean_array' do
 		it 'returns an empty array if the query is not an array' do
 			expect(DataCleaner.clean_array('foo', [])).to eq([])

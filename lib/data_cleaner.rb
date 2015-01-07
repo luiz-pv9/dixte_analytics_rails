@@ -21,6 +21,26 @@ class DataCleaner
 			end
 		end
 
+		def clean_root_hash(hash, allowed)
+			return {} unless hash.is_a? Hash
+			clean = hash.clone
+			matched = []
+			allowed.each do |pattern|
+				keys_matched = JSONMatcher.matches(pattern, clean)
+				if keys_matched
+					matched.concat(keys_matched)
+				end
+			end
+			if matched.size != clean.size
+				clean.each do |key, val|
+					if matched.index(key).nil?
+						clean.delete key
+					end
+				end
+			end
+			clean
+		end
+
 		def is_hash_cleaned(hash, allowed)
 			hash.size == clean_hash(hash, allowed).size
 		end

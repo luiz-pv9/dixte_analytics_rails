@@ -1,3 +1,5 @@
+require 'data_detector'
+
 class JSONMatcher
 	class << self
 		def matches(pattern, value)
@@ -15,17 +17,16 @@ class JSONMatcher
 
 			# Hash type
 			if pattern.is_a? Hash
-				# If the pattern is a hash, it MUST have size = 1
 				return false unless value.is_a? Hash
-				any_of_key_matched = false
-				any_of_value_matched = false
+				keys_matched = []
 				pattern.each do |p_key, p_val|
 					value.each do |v_key, v_val|
-						any_of_key_matched = true if JSONMatcher.matches(p_key, v_key)
-						any_of_value_matched = true if JSONMatcher.matches(p_val, v_val)
+						if JSONMatcher.matches(p_key, v_key) && JSONMatcher.matches(p_val, v_val)
+							keys_matched << v_key
+						end
 					end
 				end
-				return any_of_value_matched && any_of_key_matched
+				return keys_matched.size == 0 ? false : keys_matched
 			end
 
 			# Native types
@@ -37,6 +38,8 @@ class JSONMatcher
 			return value.is_a?(String) if pattern == :json_string_value
 			return value.is_a?(Numeric) if pattern == :json_numeric_value
 			return (value == true || value == false) if pattern == :json_boolean_value
+			return value.is_a?(Hash) if pattern == :json_hash_value
+			return value.is_a?(Array) if pattern == :json_array_value
 
 			# Simple types
 			return DataDetector.detect_json_simple_type(value) if pattern == :json_simple_value

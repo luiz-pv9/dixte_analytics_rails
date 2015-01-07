@@ -12,9 +12,7 @@ describe PropertyTracker do
 			expect(property_tracker.key).to eq('foo#bar')
 		end
 	end
-
-	describe ''
-
+	
 	describe 'saving propreties to the database' do
 		before :each do
 			@collection = Mongoid::Sessions.default['properties']
