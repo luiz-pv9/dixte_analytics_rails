@@ -86,8 +86,18 @@ class EventTracker
 		property_tracker.track!
 	end
 
+	def append_profile_properties(data)
+		profile = ProfileFinder.by_external_id(data['external_id'])
+		if profile && profile['properties']
+			profile['properties'].each do |key, val|
+				data['properties']["acc:#{key}"] = val
+			end
+		end
+	end
+
 	def track_event(data)
 		track_properties(data)
+		append_profile_properties(data)
 		data['happened_at'] ||= Time.now.to_i
 		data['_id'] = @@collection.insert(data)
 		return data

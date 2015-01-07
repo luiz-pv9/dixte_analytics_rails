@@ -17,5 +17,6 @@ module Analytics
 	class Application < Rails::Application
 		# Add Resque workers to the load path
 		config.autoload_paths += %W(#{config.root}/app/workers)
+		config.autoload_paths += %W(#{config.root}/app/finders)
 	end
 end

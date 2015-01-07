@@ -13,6 +13,7 @@ describe EventTracker do
 
 	before :each do
 		@event_tracker = EventTracker.new
+		@profile_tracker = ProfileTracker.new
 		App.delete_all
 		Warn.delete_all
 		@profiles = Collections::Profiles.collection
@@ -119,6 +120,101 @@ describe EventTracker do
 		end
 	end
 
-	describe 'appending the profile properties in the events'
-	describe 'storing the event'
+	describe 'storing the event' do
+		it 'stores the event if all attributes are fine' do
+			app = valid_app
+			expect {
+				@event_tracker.perform({
+					'app_token' => app.token,
+					'external_id' => 'lpvasco',
+					'type' => 'register',
+					'properties' => {
+						'name' => 'Luiz Paulo',
+						'age' => 20
+					}
+				})
+			}.to change { @events.find.count }.by(1)
+		end
+
+		it 'may receive happened_at in the data' do
+			app = valid_app
+			expect {
+				@event_tracker.perform({
+					'app_token' => app.token,
+					'external_id' => 'lpvasco',
+					'happened_at' => 12345,
+					'type' => 'register',
+					'properties' => {
+						'name' => 'Luiz Paulo',
+						'age' => 20
+					}
+				})
+			}.to change { @events.find.count }.by(1)
+			event = @events.find.first
+			expect(event['happened_at']).to eq(12345)
+		end
+	end
+
+	describe 'property tracking' do
+		it 'tracks all properties specified in the properties hash' do
+			app = valid_app
+			expect {
+				@event_tracker.perform({
+					'app_token' => app.token,
+					'external_id' => 'lpvasco',
+					'type' => 'register',
+					'properties' => {
+						'name' => 'Luiz Paulo'
+					}
+				})
+			}.to change { @properties.find.count }.by(1)
+			property = @properties.find.first
+			expect(property).to eq({
+				'_id' => property['_id'],
+				'key' => app.token + '#register',
+				'properties' => {
+					'name' => {
+						'type' => 'string',
+						'values' => {
+							'Luiz Paulo' => 1
+						}
+					}
+				}
+			})
+		end
+	end
+
+	describe 'appending the profile properties in the events' do
+		it 'appends the properties in the profile to the event with the acc:prefix' do
+			app = valid_app
+			@profile_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			@event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click',
+				'properties' => {
+					'label' => 'Help'
+				}
+			})
+
+			event = @events.find.first
+			expect(event.except('_id', 'happened_at')).to eq({
+				'app_token' => app.token,
+				'type' => 'click',
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'label' => 'Help',
+					'acc:name' => 'Luiz Paulo',
+					'acc:colors' => ['red', 'blue']
+				}
+			})
+		end
+	end
 end
