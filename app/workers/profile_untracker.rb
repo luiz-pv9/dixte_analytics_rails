@@ -17,7 +17,10 @@ class ProfileUntracker
 	end
 
 	def untrack_profile(app_token, external_id)
-		profile = ProfileFinder.by_external_id(app_token, external_id)
+		profile = ProfileFinder.by_external_id({
+			:app_token => app_token, 
+			:external_id => external_id
+		})
 		if profile
 			untrack_properties(profile)
 			remove_profile(profile)

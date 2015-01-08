@@ -39,14 +39,17 @@ describe ProfileFinder do
 		it 'finds a profile by the specified external_id' do
 			app = valid_app
 			profile = track_profile(app.token, 'lpvasco')
-			found = ProfileFinder.by_external_id(app.token, 'lpvasco')
+			found = ProfileFinder.by_external_id({
+				:app_token => app.token, 
+				:external_id => 'lpvasco'})
 			expect(found).to be_truthy
 			expect(found['external_id']).to eq('lpvasco')
 		end
 
 		it 'returns nil if no profile is found' do
 			app = valid_app
-			profile = ProfileFinder.by_external_id(app.token, 'lpvasco')
+			profile = ProfileFinder.by_external_id({:app_token => app.token, 
+				:external_id => 'lpvasco'})
 			expect(profile).to be_nil
 		end
 	end

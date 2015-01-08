@@ -5,8 +5,12 @@ class ProfileFinder
 	@@collection = Collections::Profiles.collection
 
 	class << self
-		def by_external_id(app_token, external_id)
-			@@collection.find(:app_token => app_token, :external_id => external_id).first
+		def by_external_id(opt)
+			opt.symbolize_keys!
+			@@collection.find({
+				:app_token => opt[:app_token],
+				:external_id => opt[:external_id]
+			}).first
 		end
 
 		def by_properties(app_token, properties)
