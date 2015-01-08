@@ -1,4 +1,13 @@
 module Collections
+
+	def self.query_to_array(query)
+		docs = []
+		query.each do |doc|
+			docs << doc
+		end
+		docs
+	end
+
 	class CollectionDefinition
 		class << self
 			def collection

@@ -87,7 +87,7 @@ class EventTracker
 	end
 
 	def append_profile_properties(data)
-		profile = ProfileFinder.by_external_id(data['external_id'])
+		profile = ProfileFinder.by_external_id(data['app_token'], data['external_id'])
 		if profile && profile['properties']
 			profile['properties'].each do |key, val|
 				data['properties']["acc:#{key}"] = val
