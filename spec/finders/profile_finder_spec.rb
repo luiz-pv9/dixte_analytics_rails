@@ -90,13 +90,15 @@ describe ProfileFinder do
 		end
 
 		it 'finds profiles by property string value' do
-			profiles = ProfileFinder.by_properties(@app.token, {'name' => 'User 01'})
+			profiles = ProfileFinder.by_properties({:app_token => @app.token, 
+				:properties => {'name' => 'User 01'}})
 			expect(profiles.count).to eq(1)
 			expect(profiles.first['external_id']).to eq('user1')
 		end
 
 		it 'finds profiles by number value with greater than operation' do
-			profiles = ProfileFinder.by_properties(@app.token, {'age' => {'$gt' => 19}})
+			profiles = ProfileFinder.by_properties({:app_token => @app.token, 
+				:properties => {'age' => {'$gt' => 19}}})
 			expect(profiles.count).to eq(2)
 			profiles = Collections.query_to_array(profiles)
 			expect(profiles[0]['external_id']).to eq('user1')
@@ -104,7 +106,8 @@ describe ProfileFinder do
 		end
 
 		it 'finds profiles by number value with less than operation' do
-			profiles = ProfileFinder.by_properties(@app.token, {'age' => {'$lt' => 25}})
+			profiles = ProfileFinder.by_properties({:app_token => @app.token, 
+				:properties => {'age' => {'$lt' => 25}}})
 			expect(profiles.count).to eq(2)
 			profiles = Collections.query_to_array(profiles)
 			expect(profiles[0]['external_id']).to eq('user1')
@@ -112,7 +115,8 @@ describe ProfileFinder do
 		end
 
 		it 'finds profiles by property boolean value' do
-			profiles = ProfileFinder.by_properties(@app.token, {'premium' => false})
+			profiles = ProfileFinder.by_properties({:app_token => @app.token, 
+				:properties => {'premium' => false}})
 			expect(profiles.count).to eq(2)
 			profiles = Collections.query_to_array(profiles)
 			expect(profiles[0]['external_id']).to eq('user1')
@@ -120,7 +124,8 @@ describe ProfileFinder do
 		end
 
 		it 'finds profiles by values in array property' do
-			profiles = ProfileFinder.by_properties(@app.token, {'colors' => {'$in' => ['yellow']}})
+			profiles = ProfileFinder.by_properties({:app_token => @app.token, 
+				:properties => {'colors' => {'$in' => ['yellow']}}})
 			expect(profiles.count).to eq(2)
 			profiles = Collections.query_to_array(profiles)
 			expect(profiles[0]['external_id']).to eq('user2')
@@ -128,7 +133,8 @@ describe ProfileFinder do
 		end
 
 		it 'cleans bad formatted queries' do
-			profiles = ProfileFinder.by_properties(@app.token, {'age' => 20, 'name' => {'$ne' => 'User 01'}})
+			profiles = ProfileFinder.by_properties({:app_token => @app.token, 
+				:properties => {'age' => 20, 'name' => {'$ne' => 'User 01'}}})
 			expect(profiles.count).to eq(1)
 			profiles = Collections.query_to_array(profiles)
 			expect(profiles[0]['external_id']).to eq('user1')
@@ -150,18 +156,27 @@ describe ProfileFinder do
 
 		it 'finds profiles who performed an event with properties' do
 			track_events_1
-			profiles = ProfileFinder.performed(@app.token, 'click button', {
-				'label' => 'help'				
+			profiles = ProfileFinder.performed({
+				:app_token => @app.token, 
+				:event_type => 'click button',
+				:event_properties => {
+					'label' => 'help'				
+				}
 			})
 			expect(profiles.count).to eq(2)
 		end
 
 		it 'finds profiles who performed an event with properties filtering the profiles with properties' do
 			track_events_1
-			profiles = ProfileFinder.performed(@app.token, 'click button', {
-				'label' => 'help'
-			}, nil, {
-				'type' => 'premium'
+			profiles = ProfileFinder.performed({
+				:app_token => @app.token, 
+				:event_type => 'click button',
+				:event_properties => {
+					'label' => 'help'
+				}, 
+				:profile_properties => {
+					'type' => 'premium'
+				}
 			})
 			expect(profiles.count).to eq(1)
 		end
