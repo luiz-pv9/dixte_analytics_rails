@@ -29,7 +29,7 @@ class ProfileFinder
 			@@collection.find(query)
 		end
 
-		def performed(opt = {})
+		def performed(opt)
 			opt.symbolize_keys!
 			events = EventFinder.by_type_and_properties({
 				:app_token => opt[:app_token], 
