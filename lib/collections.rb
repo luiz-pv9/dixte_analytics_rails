@@ -35,8 +35,8 @@ module Collections
 
 	class Events < CollectionDefinition
 		@name = :events
-		Mongoid::Sessions.default[@name].indexes.create({:app_token => 1, :type => 1}, {:unique => true})
-		Mongoid::Sessions.default[@name].indexes.create({:app_token => 1, :external_id => 1}, {:unique => true})
+		Mongoid::Sessions.default[@name].indexes.create({:app_token => 1, :type => 1})
+		Mongoid::Sessions.default[@name].indexes.create({:app_token => 1, :external_id => 1})
 		class << self
 			attr_reader :name
 		end

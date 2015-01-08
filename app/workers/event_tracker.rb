@@ -82,8 +82,10 @@ class EventTracker
 	end
 
 	def track_properties(data)
-		property_tracker = PropertyTracker.new([data['app_token'], data['type']], data['properties'])
-		property_tracker.track!
+		if data['properties'].size > 0
+			property_tracker = PropertyTracker.new([data['app_token'], data['type']], data['properties'])
+			property_tracker.track!
+		end
 	end
 
 	def append_profile_properties(data)

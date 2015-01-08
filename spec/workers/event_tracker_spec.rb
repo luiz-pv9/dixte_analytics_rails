@@ -217,4 +217,7 @@ describe EventTracker do
 			})
 		end
 	end
+
+	describe 'registering the event type for the application' do
+	end
 end

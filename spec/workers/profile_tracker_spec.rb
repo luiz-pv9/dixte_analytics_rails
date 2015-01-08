@@ -291,6 +291,22 @@ describe ProfileTracker do
 			profile = @profiles.find.first
 			expect(profile['properties']['colors']).to be_nil
 		end
+
+		it 'acceps profiles with empty properties hash' do
+			profile = nil
+			expect {
+				@profile_tracker.perform({
+					'app_token' => valid_app_token,
+					'external_id' => 'lpvasco',
+					'properties' => {}
+				})
+				@profile_tracker.perform({
+					'app_token' => valid_app_token,
+					'external_id' => 'luiz',
+					'properties' => {}
+				})
+			}.to change { @profiles.find.count }.by(2)
+		end
 	end
 
 	describe 'tracking properties (PropertyTracker usage)' do
@@ -311,7 +327,7 @@ describe ProfileTracker do
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
-				'key' => app_token,
+				'key' => app_token + '#profiles',
 				'properties' => {
 					'name' => {
 						'type' => 'string',
@@ -358,7 +374,7 @@ describe ProfileTracker do
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
-				'key' => app_token,
+				'key' => app_token + '#profiles',
 				'properties' => {
 					'name' => {
 						'type' => 'string',
@@ -393,7 +409,7 @@ describe ProfileTracker do
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
-				'key' => app_token,
+				'key' => app_token + '#profiles',
 				'properties' => {
 					'name' => {
 						'type' => 'string',
@@ -426,7 +442,7 @@ describe ProfileTracker do
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
-				'key' => app_token,
+				'key' => app_token + '#profiles',
 				'properties' => {
 					'colors' => {
 						'type' => 'array',
@@ -461,7 +477,7 @@ describe ProfileTracker do
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
-				'key' => app_token,
+				'key' => app_token + '#profiles',
 				'properties' => {
 					'colors' => {
 						'type' => 'array',
@@ -494,7 +510,7 @@ describe ProfileTracker do
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
-				'key' => app_token,
+				'key' => app_token + '#profiles',
 				'properties' => {
 					'name' => {
 						'type' => 'string',
