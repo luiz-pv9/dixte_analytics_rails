@@ -129,17 +129,18 @@ class ProfileTracker
 		end
 
 		if track.size > 0
-			PropertyTracker.new([data['app_token'], 'profiles'], track).track!
+			PropertyTracker.new(App.profile_properties_key(data['app_token']), track).track!
 		end
 
 		if untrack.size > 0
-			PropertyUntracker.new([data['app_token'], 'profiles'], untrack).untrack!
+			PropertyUntracker.new(App.profile_properties_key(data['app_token']), untrack).untrack!
 		end
 	end
 
 	def track_insert_properties(data)
 		if data['properties'].size > 0
-			property_tracker = PropertyTracker.new([data['app_token'], 'profiles'], data['properties'])
+			property_tracker = PropertyTracker.new(App.profile_properties_key(data['app_token']),
+				data['properties'])
 			property_tracker.track!
 		end
 	end

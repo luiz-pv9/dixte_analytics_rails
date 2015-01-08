@@ -88,6 +88,13 @@ class EventTracker
 		end
 	end
 
+	def track_event_type(data)
+		property_tracker = PropertyTracker.new(App.event_types_key(data['app_token']), {
+			'type' => data['type']			
+		})
+		property_tracker.track!
+	end
+
 	def append_profile_properties(data)
 		profile = ProfileFinder.by_external_id(data['app_token'], data['external_id'])
 		if profile && profile['properties']
@@ -99,6 +106,7 @@ class EventTracker
 
 	def track_event(data)
 		track_properties(data)
+		track_event_type(data)
 		append_profile_properties(data)
 		data['happened_at'] ||= Time.now.to_i
 		data['_id'] = @@collection.insert(data)

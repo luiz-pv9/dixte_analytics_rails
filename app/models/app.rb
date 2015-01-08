@@ -7,6 +7,16 @@ class App
 	include Mongoid::Document
 	include Tokenable
 
+	class << self
+		def profile_properties_key(app_token)
+			[app_token, 'profiles']
+		end
+
+		def event_types_key(app_token)
+			[app_token, 'event_types']
+		end
+	end
+
 	store_in :collection => Collections::Apps.name
 
 	# Fields

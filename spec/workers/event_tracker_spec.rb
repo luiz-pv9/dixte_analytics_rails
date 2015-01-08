@@ -158,16 +158,14 @@ describe EventTracker do
 	describe 'property tracking' do
 		it 'tracks all properties specified in the properties hash' do
 			app = valid_app
-			expect {
-				@event_tracker.perform({
-					'app_token' => app.token,
-					'external_id' => 'lpvasco',
-					'type' => 'register',
-					'properties' => {
-						'name' => 'Luiz Paulo'
-					}
-				})
-			}.to change { @properties.find.count }.by(1)
+			@event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'register',
+				'properties' => {
+					'name' => 'Luiz Paulo'
+				}
+			})
 			property = @properties.find.first
 			expect(property).to eq({
 				'_id' => property['_id'],
@@ -219,5 +217,66 @@ describe EventTracker do
 	end
 
 	describe 'registering the event type for the application' do
+		it 'tracks the event type when registering an event' do
+			app = valid_app
+			expect {
+				@event_tracker.perform({
+					'app_token' => app.token,
+					'external_id' => 'lpvasco',
+					'type' => 'register',
+					'properties' => {
+						'name' => 'Luiz Paulo',
+						'age' => 20
+					}
+				})
+			}.to change { @properties.find.count }.by(2)
+
+			properties = Collections.query_to_array(@properties.find)
+			expect(properties[1].except('_id')).to eq({
+				'key' => app.token + '#event_types',
+				'properties' => {
+					'type' => {
+						'type' => 'string',
+						'values' => {
+							'register' => 1
+						}
+					}
+				}
+			})
+		end
+
+		it 'increments the counter when registering another event of the same type' do
+			app = valid_app
+			@event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'register',
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'age' => 20
+				}
+			})
+			@event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'luiz',
+				'type' => 'register',
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'age' => 20
+				}
+			})
+			properties = Collections.query_to_array(@properties.find)
+			expect(properties[1].except('_id')).to eq({
+				'key' => app.token + '#event_types',
+				'properties' => {
+					'type' => {
+						'type' => 'string',
+						'values' => {
+							'register' => 2
+						}
+					}
+				}
+			})
+		end
 	end
 end
