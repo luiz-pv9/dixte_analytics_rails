@@ -6,6 +6,12 @@ class EventFinder
 	@@collection = Collections::Events.collection
 
 	class << self
+
+		# Required keys =>
+		# :app_token
+		# :type
+		# Optional keys =>
+		# :time_range
 		def by_type(opt)
 			opt.symbolize_keys!
 			opt[:time_range] ||= TimeRange.new
@@ -14,6 +20,12 @@ class EventFinder
 			@@collection.find(query)
 		end
 
+		# Required keys =>
+		# :app_token
+		# :type
+		# :properties
+		# Optional keys =>
+		# :time_range
 		def by_type_and_properties(opt)
 			opt.symbolize_keys!
 			opt[:time_range] ||= TimeRange.new

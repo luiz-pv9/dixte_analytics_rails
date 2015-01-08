@@ -5,6 +5,10 @@ class ProfileFinder
 	@@collection = Collections::Profiles.collection
 
 	class << self
+
+		# Required keys =>
+		# :app_token
+		# :external_id
 		def by_external_id(opt)
 			opt.symbolize_keys!
 			@@collection.find({
@@ -13,6 +17,9 @@ class ProfileFinder
 			}).first
 		end
 
+		# Required keys =>
+		# :app_token
+		# :properties
 		def by_properties(opt)
 			opt.symbolize_keys!
 			properties = DataCleaner.clean_hash(opt[:properties], [
@@ -29,12 +36,19 @@ class ProfileFinder
 			@@collection.find(query)
 		end
 
+		# Required keys =>
+		# :app_token
+		# :event_type
+		# Optional keys =>
+		# :event_properties
+		# :time_range
+		# :profile_properties
 		def performed(opt)
 			opt.symbolize_keys!
 			events = EventFinder.by_type_and_properties({
 				:app_token => opt[:app_token], 
 				:type => opt[:event_type], 
-				:properties => opt[:event_properties], 
+				:properties => opt[:event_properties] || {},
 				:time_range => opt[:time_range]
 			})
 
