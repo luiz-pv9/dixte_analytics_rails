@@ -13,8 +13,9 @@ class ProfileFinder
 			}).first
 		end
 
-		def by_properties(app_token, properties)
-			properties = DataCleaner.clean_hash(properties, [
+		def by_properties(opt)
+			opt.symbolize_keys!
+			properties = DataCleaner.clean_hash(opt[:properties], [
 				:json_simple_value,
 				{'$gt' => :json_numeric_value},
 				{'$lt' => :json_numeric_value},
@@ -24,7 +25,7 @@ class ProfileFinder
 			properties.each do |key, val|
 				query["properties.#{key}"] = val
 			end
-			query['app_token'] = app_token
+			query['app_token'] = opt[:app_token]
 			@@collection.find(query)
 		end
 
