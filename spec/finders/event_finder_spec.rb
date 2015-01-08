@@ -58,8 +58,8 @@ describe EventFinder do
 
 		it 'may specify the range for the events to happen' do
 			track_events_1_time
-			events = EventFinder.by_type(@app.token, 'visit page')
-			expect(events.count).to eq(2)
+			events = EventFinder.by_type(@app.token, 'visit page', TimeRange.new(1000, 1001))
+			expect(events.count).to eq(1)
 		end
 	end
 
