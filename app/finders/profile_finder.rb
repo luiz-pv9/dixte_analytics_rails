@@ -23,5 +23,26 @@ class ProfileFinder
 			query['app_token'] = app_token
 			@@collection.find(query)
 		end
+
+		def performed(app_token, event_type, event_properties = {}, time_range = nil, profile_properties = {})
+			events = EventFinder.by_type_and_properties(app_token, event_type, 
+				event_properties, time_range)
+
+			properties = DataCleaner.clean_hash(profile_properties, [
+				:json_simple_value,
+				{'$gt' => :json_numeric_value},
+				{'$lt' => :json_numeric_value},
+				{'$in' => [:json_simple_value]}
+			])
+			query = {
+				'app_token' => app_token,
+				'external_id' => {'$in' => events.distinct('external_id')}
+			}
+			properties.each do |key, val|
+				query["properties.#{key}"] = val
+			end
+
+			@@collection.find(query)
+		end
 	end
 end

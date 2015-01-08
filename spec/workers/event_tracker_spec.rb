@@ -166,7 +166,8 @@ describe EventTracker do
 					'name' => 'Luiz Paulo'
 				}
 			})
-			property = @properties.find.first
+			properties = Collections.query_to_array(@properties.find)
+			property = properties[0]['key'] == app.token + '#register' ? properties[0] : properties[1]
 			expect(property).to eq({
 				'_id' => property['_id'],
 				'key' => app.token + '#register',
@@ -232,7 +233,8 @@ describe EventTracker do
 			}.to change { @properties.find.count }.by(2)
 
 			properties = Collections.query_to_array(@properties.find)
-			expect(properties[1].except('_id')).to eq({
+			property = (properties[0]['key'] == app.token + '#event_types') ? properties[0] : properties[1]
+			expect(property.except('_id')).to eq({
 				'key' => app.token + '#event_types',
 				'properties' => {
 					'type' => {
@@ -266,7 +268,8 @@ describe EventTracker do
 				}
 			})
 			properties = Collections.query_to_array(@properties.find)
-			expect(properties[1].except('_id')).to eq({
+			property = (properties[0]['key'] == app.token + '#event_types') ? properties[0] : properties[1]
+			expect(property.except('_id')).to eq({
 				'key' => app.token + '#event_types',
 				'properties' => {
 					'type' => {
