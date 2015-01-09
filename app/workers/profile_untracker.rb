@@ -7,7 +7,7 @@ class ProfileUntracker
 	def untrack_properties(profile)
 		if profile['properties'] && profile['properties'].size > 0
 			property_untracker = PropertyUntracker.new(
-				App.profile_properties_key(profile['app_token']), profile['properties'])
+				App.profiles_key(profile['app_token']), profile['properties'])
 			property_untracker.untrack!
 		end
 	end

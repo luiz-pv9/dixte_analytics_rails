@@ -8,7 +8,7 @@ class App
 	include Tokenable
 
 	class << self
-		def profile_properties_key(app_token)
+		def profiles_key(app_token)
 			[app_token, 'profiles']
 		end
 

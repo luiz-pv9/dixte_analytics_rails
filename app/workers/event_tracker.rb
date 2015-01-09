@@ -57,30 +57,6 @@ class EventTracker
 		App.find_by(:token => data['app_token'])
 	end
 
-	def update_track_query(query, prop, val)
-		if val.nil?
-			query['$unset'] ||= {}
-			query['$unset']["properties.#{prop}"] = ''
-		else
-			if prop.index('$inc.') == 0
-				prop_to_increment = prop.sub('$inc.', '')
-				query['$inc'] ||= {}
-				query['$inc']["properties.#{prop_to_increment}"] = val
-			elsif prop.index('$push.') == 0
-				prop_to_increment = prop.sub('$push.', '')
-				query['$push'] ||= {}
-				query['$push']["properties.#{prop_to_increment}"] = val
-			elsif prop.index('$pull.') == 0
-				prop_to_increment = prop.sub('$pull.', '')
-				query['$pull'] ||= {}
-				query['$pull']["properties.#{prop_to_increment}"] = val
-			else
-				query['$set'] ||= {}
-				query['$set']["properties.#{prop}"] = val
-			end
-		end
-	end
-
 	def track_properties(data)
 		if data['properties'].size > 0
 			property_tracker = PropertyTracker.new([data['app_token'], data['type']], data['properties'])

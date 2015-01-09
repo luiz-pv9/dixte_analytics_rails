@@ -19,7 +19,7 @@ describe App do
 
 	describe 'keys of tracking properties' do
 		it 'has a key for profile properties' do
-			expect(App.profile_properties_key('foo')).to eq(['foo', 'profiles'])
+			expect(App.profiles_key('foo')).to eq(['foo', 'profiles'])
 		end
 
 		it 'has a key for events properties' do
