@@ -174,4 +174,29 @@ describe EventFinder do
 			expect(events.count).to eq(1)
 		end
 	end
+
+	describe '.by_external_id' do
+
+		def track_events_3
+			track_event('visit page', {}, 'lpvasco')
+			track_event('click button', {}, 'luiz')
+			track_event('visit page', {}, 'lpvasco')
+			track_event('visit page', {}, 'fran')
+		end
+
+		it 'return all events of a specific external id' do
+			track_events_3
+			events = EventFinder.by_external_id({
+				:app_token => @app.token, 
+				:external_id => 'lpvasco'
+			})
+			expect(events.count).to eq(2)
+
+			events = EventFinder.by_external_id({
+				:app_token => @app.token, 
+				:external_id => 'luiz'
+			})
+			expect(events.count).to eq(1)
+		end
+	end
 end

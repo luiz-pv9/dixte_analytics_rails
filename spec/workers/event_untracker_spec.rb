@@ -21,7 +21,7 @@ describe EventUntracker do
 					'app_token' => @app.token,
 					'external_id' => 'lpvasco',
 					'type' => 'click button',
-					'properties' => {}				
+					'properties' => {}
 				})
 			}.to change { @events.find.count }.by(1)
 
@@ -39,7 +39,7 @@ describe EventUntracker do
 					'app_token' => @app.token,
 					'external_id' => 'lpvasco',
 					'type' => 'click button',
-					'properties' => {}				
+					'properties' => {}
 				})
 			}.to change { @events.find.count }.by(1)
 
@@ -95,14 +95,131 @@ describe EventUntracker do
 					:id => event['_id']
 				})
 			}.to change { @properties.find.count }.by(0)
+
+			event_types = PropertyFinder.event_types(@app.token)
+			# Only one reference to click button now
+			expect(event_types['properties']['type']['values']['click button']).to eq(1)
 		end
 
-		it 'untracks the event properties'
+		it 'untracks the event properties' do
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {
+					'label' => 'Help'
+				}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {
+					'label' => 'Exit'
+				}
+			})
+
+			event = @events.find.first
+			expect {
+				@event_untracker.perform({
+					:id => event['_id']
+				})
+			}.to change { @properties.find.count }.by(0)
+
+			property = PropertyFinder.event(@app.token, 'click button')
+			expect(property['properties']['label']['values'].size).to eq(1)
+		end
 	end
 
 	describe 'untracking by list of ids' do
+		# There is no need to test more because the same method is used
+		# when untracking by a single id
+		it 'may receive a list of event ids to untrack' do
+			event = @event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			event = @event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+
+			events_ids = @events.find.distinct(:_id)
+			expect {
+				@event_untracker.perform({
+					:ids => events_ids					
+				})
+			}.to change { @events.find.count }.by(-2)
+		end
 	end
 	
-	describe 'untracking by profile'
+	describe 'untracking by profile' do
+		it 'removes all events of a profile' do
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'luiz',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'open modal',
+				'properties' => {}
+			})
+
+			expect {
+				@event_untracker.perform({
+					:app_token => @app.token,
+					:external_id => 'lpvasco'
+				})
+			}.to change { @events.find.count }.by(-2)
+		end
+
+		it 'untracks the properties and reference' do
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {'label' => 'what'}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'luiz',
+				'type' => 'click button',
+				'properties' => {'label' => 'exit'}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'open modal',
+				'properties' => {'size' => 3}
+			})
+
+			expect {
+				@event_untracker.perform({
+					:app_token => @app.token,
+					:external_id => 'lpvasco'
+				})
+			}.to change { @properties.find.count }.by(-1)
+
+			property = PropertyFinder.event_types(@app.token)
+			expect(property['properties']['type']['values'].size).to eq(1)
+
+			click_button = PropertyFinder.event(@app.token, 'click button')
+			expect(click_button['properties']['label']['values'].size).to eq(1)
+		end
+	end
+
 	describe 'untracking by time range'
 end
