@@ -1,8 +1,9 @@
 require 'rails_helper'
+require 'collections'
 
 describe App do
 	before :each do
-		App.delete_all
+		delete_all
 	end
 
 	describe 'required fields' do
@@ -31,7 +32,11 @@ describe App do
 	end
 
 	describe 'warns' do
-		it 'has many warns'
+		it 'has many warns' do
+			@app = App.create :name => 'Dixte'
+			warn = Warn.create(:app => @app, :level => Warn::LOW, :message => 'what')
+			expect(@app.warns).to eq([warn])
+		end
 		it 'removes warns based on creation time'
 	end
 
@@ -49,5 +54,75 @@ describe App do
 			expect(app.name).to eq('Liato')
 			expect(app.token).to eq(app_token)
 		end
+	end
+
+	describe 'metrics' do
+		before :each do
+			@event_tracker = EventTracker.new
+		end
+
+		it 'returns all events of the app' do
+			app_1 = App.create :name => 'Dixte'
+			app_2 = App.create :name => 'Fran'
+
+			@event_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'luiz',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => app_2.token,
+				'external_id' => 'fran',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+
+			expect(app_1.events.count).to eq(3)
+			expect(app_2.events.count).to eq(1)
+		end
+
+		it 'finds all events that happened in a month' do
+			app_1 = App.create :name => 'Dixte'
+
+			@event_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'lpvasco',
+				'happened_at' => Time.strptime('01/03/2014', '%d/%m/%Y').to_i,
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'luiz',
+				'happened_at' => Time.strptime('30/03/2014', '%d/%m/%Y').to_i,
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => app_1.token,
+				'happened_at' => Time.strptime('05/04/2014', '%d/%m/%Y').to_i,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+
+			expect(app_1.events_at_month('2014', '03').count).to eq(2)
+			expect(app_1.events_at_month('2014', '04').count).to eq(1)
+		end
+
+		it 'finds all profiles for the app'
 	end
 end

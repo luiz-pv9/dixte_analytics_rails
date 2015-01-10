@@ -36,6 +36,13 @@ class ProfileFinder
 			@@collection.find(query)
 		end
 
+		def by_app_token(opt)
+			opt.symbolize_keys!
+			@@collection.find({
+				:app_token => opt[:app_token]
+			})
+		end
+
 		# Required keys =>
 		# :app_token
 		# :event_type

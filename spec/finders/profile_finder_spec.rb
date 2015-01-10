@@ -181,4 +181,18 @@ describe ProfileFinder do
 			expect(profiles.count).to eq(1)
 		end
 	end
+
+	describe '.by_app_token' do
+		it 'returns all profiles of an app' do
+			app_1 = App.create :name => 'Dixte'
+			app_2 = App.create :name => 'Turn down for what'
+			track_profile(app_1.token, 'lpvasco', {'type' => 'premium'})
+			track_profile(app_1.token, 'luiz', {'type' => 'normal'})
+			track_profile(app_1.token, 'fran')
+			track_profile(app_2.token, 'cat')
+
+			expect(ProfileFinder.by_app_token(:app_token => app_1.token).count).to eq(3)
+			expect(ProfileFinder.by_app_token(:app_token => app_2.token).count).to eq(1)
+		end
+	end
 end

@@ -3,6 +3,7 @@ ENV["RAILS_ENV"] ||= 'test'
 require 'spec_helper'
 require File.expand_path("../../config/environment", __FILE__)
 require 'rspec/rails'
+require 'collections'
 # Add additional requires below this line. Rails is not loaded until this point!
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
@@ -36,3 +37,12 @@ RSpec.configure do |config|
   # https://relishapp.com/rspec/rspec-rails/docs
   config.infer_spec_type_from_file_location!
 end
+
+def delete_all
+  App.delete_all
+  Warn.delete_all
+  Collections::Profiles.collection.find.remove_all
+  Collections::Events.collection.find.remove_all
+  Collections::Properties.collection.find.remove_all
+end
+

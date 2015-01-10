@@ -27,4 +27,28 @@ class App
 
 	# Validation
 	validates_presence_of :name
+
+	# Metrics for the application
+	def events
+		EventFinder.by_time_range({
+			:app_token => token,
+			:time_range => TimeRange.new(Time.strptime('01/01/2000', '%d/%m/%Y'), 
+										 Time.strptime('01/01/2050', '%d/%m/%Y'))
+		})
+	end
+
+	def profiles
+		ProfileFinder.by_app_token({
+			:app_token => token
+		})
+	end
+
+	def events_at_month(year, month)
+		from = Time.strptime("01/#{month}/#{year}", '%d/%m/%Y')
+		to = from.next_month
+		EventFinder.by_time_range({
+			:app_token => token,
+			:time_range => TimeRange.new(from, to)
+		})
+	end
 end
