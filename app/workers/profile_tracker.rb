@@ -137,13 +137,14 @@ class ProfileCleaner
 
 	def initialize(data)
 		@data = data
+		@message = I18n.t('profile.warn.generic_fail')
 	end
 
 	def generate_not_tracked_warn
 		return false unless @app
 		Warn.create({
 			:level => Warn::MEDIUM,
-			:message => 'Profile was not tracked due to invalid attributes.',
+			:message => @message,
 			:data => @data,
 			:app => @app
 		})
@@ -163,11 +164,34 @@ class ProfileCleaner
 	end
 
 	def clean_properties(properties)
-		DataCleaner.clean_hash(properties, [
+		cleaned = DataCleaner.clean_hash(properties, [
 			:json_simple_value,
 			:json_null_value,
 			[:json_string_value]
 		])
+
+		# Need to check for specific property operations: $inc, $pull and $push
+		# In case of $inc, only allowed numeric values.
+		# In case of $pull and $push, only allow string values
+		# If in the future there is support for array of other values other than
+		# strings, this method is gonna need to be changed.
+		cleaned.each do |key, val|
+			if key.index('$inc') == 0
+				unless val.is_a?(Numeric)
+					cleaned.delete(key)
+					@message = I18n.t('profile.warn.$inc_fail')
+				end
+			end
+
+			if key.index('$pull') == 0 || key.index('$push') == 0
+				unless val.is_a?(String)
+					cleaned.delete(key)
+					@message = I18n.t('profile.warn.$push_$pull_fail')
+				end
+			end
+		end
+
+		cleaned
 	end
 
 	def check_properties

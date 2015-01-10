@@ -307,6 +307,115 @@ describe ProfileTracker do
 				})
 			}.to change { @profiles.find.count }.by(2)
 		end
+
+		it 'generates a warn if the value specified in $inc is not numeric' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'visit_count' => 2
+				}
+			})
+			expect {
+				@profile_tracker.perform({
+					'app_token' => app_token,
+					'external_id' => 'lpvasco',
+					'properties' => {
+						'$inc.visit_count' => '3'
+					}
+				})
+			}.to change { Warn.all.count }.by(1)
+		end
+
+		it 'has a custom message on the warn if the $inc is not numeric' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'visit_count' => 2
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$inc.visit_count' => '3'
+				}
+			})
+			expect(Warn.last.message.index('$inc')).not_to be_nil
+		end
+
+		it 'generates a warn if the value specified in $pull is not a string' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			expect {
+				@profile_tracker.perform({
+					'app_token' => app_token,
+					'external_id' => 'lpvasco',
+					'properties' => {
+						'$pull.colors' => true
+					}
+				})
+			}.to change { Warn.all.count }.by(1)
+		end
+
+		it 'generates a warn if the value specified in $push is not a string' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			expect {
+				@profile_tracker.perform({
+					'app_token' => app_token,
+					'external_id' => 'lpvasco',
+					'properties' => {
+						'$push.colors' => 3
+					}
+				})
+			}.to change { Warn.all.count }.by(1)
+		end
+
+		it 'has a custom message on the warn if the $pull or $push value is not a string' do
+			app_token = valid_app_token
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'created_at' => 123456,
+				'properties' => {
+					'name' => 'Luiz Paulo',
+					'colors' => ['red', 'blue']
+				}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_token,
+				'external_id' => 'lpvasco',
+				'properties' => {
+					'$push.colors' => 3
+				}
+			})
+			expect(Warn.last.message.index('$push')).not_to be_nil
+			expect(Warn.last.message.index('$pull')).not_to be_nil
+		end
 	end
 
 	describe 'tracking properties (PropertyTracker usage)' do
