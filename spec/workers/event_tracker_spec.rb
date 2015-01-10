@@ -25,8 +25,8 @@ describe EventTracker do
 		@events.find().remove_all
 	end
 
-	it 'returns -1 if the app token is not present in the data' do
-		expect(@event_tracker.perform({'foo' => 'bar'})).to eq(-1)
+	it 'returns false if the app token is not present in the data' do
+		expect(@event_tracker.perform({'foo' => 'bar'})).to eq(false)
 	end
 
 	describe 'warning generation on bad formatted events' do
