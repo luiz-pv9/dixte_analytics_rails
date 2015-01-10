@@ -35,13 +35,19 @@ describe ProfileUntracker do
 		it 'removes the profile from the external_id' do
 			track_profiles_1
 			expect {
-				@profile_untracker.perform(@app.token, 'lpvasco')
+				@profile_untracker.perform({
+					:app_token => @app.token, 
+					:external_id => 'lpvasco'
+				})
 			}.to change { @profiles.find.count }.by(-1)
 		end
 
 		it 'untracks the properties in the profile being removed' do
 			track_profiles_1
-			@profile_untracker.perform(@app.token, 'lpvasco')
+			@profile_untracker.perform({
+				:app_token => @app.token, 
+				:external_id => 'lpvasco'
+			})
 			property = @properties.find.first
 			expect(property.except('_id')).to eq({
 				'key' => @app.token + '#profiles',
@@ -82,7 +88,10 @@ describe ProfileUntracker do
 		it 'removes multiple profiles from external ids' do
 			track_profiles_2
 			expect {
-				@profile_untracker.perform(@app.token, ['lpvasco', 'sinxoll'])
+				@profile_untracker.perform({
+					:app_token => @app.token, 
+					:external_ids => ['lpvasco', 'sinxoll']
+				})
 			}.to change { @profiles.find.count }.by(-2)
 			property = @properties.find.first
 			expect(property.except('_id')).to eq({

@@ -27,13 +27,16 @@ class ProfileUntracker
 		end
 	end
 
-	def perform(app_token, external_id)
-		if external_id.is_a?(Array)
-			external_id.each do |e_external_id|
-				untrack_profile(app_token, e_external_id)
+	def perform(opt)
+		opt.symbolize_keys!
+		if opt[:external_id]
+			untrack_profile(opt[:app_token], opt[:external_id])
+		end
+
+		if opt[:external_ids]
+			opt[:external_ids].each do |external_id|
+				untrack_profile(opt[:app_token], external_id)
 			end
-		else
-			untrack_profile(app_token, external_id)
 		end
 	end
 end

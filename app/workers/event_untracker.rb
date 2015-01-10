@@ -34,7 +34,15 @@ class EventUntracker
 		events.remove_all
 	end
 
+	def untrack_by_query(query)
+		query.each do |event|
+			untrack_event(event)
+		end
+		query.remove_all
+	end
+
 	def perform(opt)
+		opt.symbolize_keys!
 		if opt[:id]
 			untrack_events([opt[:id]])
 		end
@@ -48,10 +56,7 @@ class EventUntracker
 				:app_token => opt[:app_token],
 				:external_id => opt[:external_id]
 			})
-			events.each do |event|
-				untrack_event(event)
-			end
-			events.remove_all
+			untrack_by_query(events)
 		end
 
 		# The time_range option is not a ruby object because the value
@@ -63,10 +68,7 @@ class EventUntracker
 				:app_token => opt[:app_token],
 				:time_range => time_range
 			})
-			events.each do |event|
-				untrack_event(event)
-			end
-			events.remove_all
+			untrack_by_query(events)
 		end
 	end
 end
