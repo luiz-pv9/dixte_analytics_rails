@@ -137,7 +137,7 @@ class ProfileCleaner
 
 	def initialize(data)
 		@data = data
-		@message = I18n.t('profile.warn.generic_fail')
+		@message = I18n.t('profile.warn.messages.generic')
 	end
 
 	def generate_not_tracked_warn
@@ -179,14 +179,14 @@ class ProfileCleaner
 			if key.index('$inc') == 0
 				unless val.is_a?(Numeric)
 					cleaned.delete(key)
-					@message = I18n.t('profile.warn.$inc_fail')
+					@message = I18n.t('profile.warn.messages.inc')
 				end
 			end
 
 			if key.index('$pull') == 0 || key.index('$push') == 0
 				unless val.is_a?(String)
 					cleaned.delete(key)
-					@message = I18n.t('profile.warn.$push_$pull_fail')
+					@message = I18n.t('profile.warn.messages.push_pull')
 				end
 			end
 		end

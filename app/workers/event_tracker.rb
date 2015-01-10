@@ -55,13 +55,14 @@ class EventCleaner
 
 	def initialize(data)
 		@data = data
+		@message = I18n.t('event.warn.messages.generic')
 	end
 
 	def generate_not_tracked_warn
 		return false unless @app
 		Warn.create({
 			:level => Warn::MEDIUM,
-			:message => 'Event was not tracked due to invalid attributes.',
+			:message => @message,
 			:data => @data,
 			:app => @app
 		})

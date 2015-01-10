@@ -20,4 +20,14 @@
 # available at http://guides.rubyonrails.org/i18n.html.
 
 en:
-  hello: "Hello world"
+  profile:
+    warn:
+      messages:
+        generic: 'generic'
+        inc: '$inc'
+        push_pull: '$push or $pull'
+  event:
+    warn:
+      messages:
+        generic: 'generic'
+
