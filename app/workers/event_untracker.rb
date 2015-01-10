@@ -41,6 +41,14 @@ class EventUntracker
 		query.remove_all
 	end
 
+	def untrack_by_profile(app_token, external_id)
+		events = EventFinder.by_external_id({
+			:app_token => app_token,
+			:external_id => external_id
+		})
+		untrack_by_query(events)
+	end
+
 	def perform(opt)
 		opt.symbolize_keys!
 		if opt[:id]
@@ -52,11 +60,13 @@ class EventUntracker
 		end
 
 		if opt[:external_id]
-			events = EventFinder.by_external_id({
-				:app_token => opt[:app_token],
-				:external_id => opt[:external_id]
-			})
-			untrack_by_query(events)
+			untrack_by_profile(opt[:app_token], opt[:external_id])
+		end
+
+		if opt[:external_ids]
+			opt[:external_ids].each do |external_id|
+				untrack_by_profile(opt[:app_token], external_id)
+			end
 		end
 
 		# The time_range option is not a ruby object because the value

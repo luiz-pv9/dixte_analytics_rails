@@ -221,6 +221,36 @@ describe EventUntracker do
 		end
 	end
 
+	describe 'untracking by multiple profiles' do
+		it 'removes all events of the specified profiles' do
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'luiz',
+				'type' => 'click button',
+				'properties' => {}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'fran',
+				'type' => 'open modal',
+				'properties' => {}
+			})
+
+			expect {
+				@event_untracker.perform({
+					:app_token => @app.token,
+					:external_ids => ['luiz', 'fran']
+				})
+			}.to change { @events.find.count }.by(-2)
+		end
+	end
+
 	describe 'untracking by time range' do
 		def track_events_1
 			@event_tracker.perform({
