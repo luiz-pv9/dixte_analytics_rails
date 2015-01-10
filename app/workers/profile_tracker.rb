@@ -5,59 +5,7 @@ require 'collections'
 class ProfileTracker
 	include Sidekiq::Worker
 
-	@@necessary_keys = ['app_token', 'properties', 'external_id']
 	@@collection = Collections::Profiles.collection
-
-	def generate_not_tracked_warn(data, app)
-		Warn.create({
-			:level => Warn::MEDIUM,
-			:message => 'Profile was not tracked due to invalid attributes.',
-			:data => data,
-			:app => app
-		})
-	end
-
-	def check_data_format(data, app)
-		cleaned = DataCleaner.clean_root_hash(data, 
-			[
-				{'app_token' => :json_string_value},
-				{'created_at' => :json_numeric_value},
-				{'updated_at' => :json_numeric_value},
-				{'external_id' => :json_string_value},
-				{'properties' => :json_hash_value}
-			])
-
-		has_all_valid_keys = HashParam.has_all_keys(@@necessary_keys, cleaned)
-
-
-		unless has_all_valid_keys
-			generate_not_tracked_warn(data, app)
-			return false
-		end
-		return true
-	end
-
-	def clean_properties(properties)
-		DataCleaner.clean_hash(properties, [
-			:json_simple_value,
-			:json_null_value,
-			[:json_string_value]
-		])
-	end
-
-	def check_properties(data, app)
-		cleaned_properties = clean_properties(data['properties'])
-
-		unless cleaned_properties.size == data['properties'].size
-			generate_not_tracked_warn(data, app)
-			return false
-		end
-		return true
-	end
-
-	def find_app(data)
-		App.find_by(:token => data['app_token'])
-	end
 
 	def update_track_query(query, prop, val)
 		if val.nil?
@@ -175,12 +123,60 @@ class ProfileTracker
 	end
 
 	def perform(data)
-		app = find_app(data)
-		return -1 unless app
-		if check_data_format(data, app)
-			if check_properties(data, app)
-				return track_profile(data)
-			end
+		profile_cleaner = ProfileCleaner.new(data)
+		if profile_cleaner.clean?
+			track_profile data
+		else
+			profile_cleaner.generate_not_tracked_warn
 		end
+	end
+end
+
+class ProfileCleaner
+	@@necessary_keys = ['app_token', 'properties', 'external_id']
+
+	def initialize(data)
+		@data = data
+	end
+
+	def generate_not_tracked_warn
+		return false unless @app
+		Warn.create({
+			:level => Warn::MEDIUM,
+			:message => 'Profile was not tracked due to invalid attributes.',
+			:data => @data,
+			:app => @app
+		})
+	end
+
+	def check_data_format
+		cleaned = DataCleaner.clean_root_hash(@data, 
+			[
+				{'app_token' => :json_string_value},
+				{'created_at' => :json_numeric_value},
+				{'updated_at' => :json_numeric_value},
+				{'external_id' => :json_string_value},
+				{'properties' => :json_hash_value}
+			])
+
+		HashParam.has_all_keys(@@necessary_keys, cleaned)
+	end
+
+	def clean_properties(properties)
+		DataCleaner.clean_hash(properties, [
+			:json_simple_value,
+			:json_null_value,
+			[:json_string_value]
+		])
+	end
+
+	def check_properties
+		cleaned_properties = clean_properties(@data['properties'])
+		cleaned_properties.size == @data['properties'].size
+	end
+
+	def clean?
+		@app = App.find_by(:token => @data['app_token'])
+		@app && check_data_format && check_properties
 	end
 end

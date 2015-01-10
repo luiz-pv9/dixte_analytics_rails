@@ -21,8 +21,8 @@ describe ProfileTracker do
 		@properties.find().remove_all
 	end
 
-	it 'returns -1 if the app_token is not present in the data' do
-		expect(@profile_tracker.perform({'foo' => 'bar'})).to be(-1)
+	it 'returns false if the app_token is not present in the data' do
+		expect(@profile_tracker.perform({'foo' => 'bar'})).to be(false)
 	end
 
 	describe 'warning generation on bad formatted profiles' do
