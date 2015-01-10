@@ -52,5 +52,15 @@ class EventFinder
 				:external_id => opt[:external_id]
 			})
 		end
+
+		# Required keys =>
+		# :app_token
+		# :time_range
+		def by_time_range(opt)
+			query = {:app_token => opt[:app_token]}
+			opt[:time_range] ||= TimeRange.new
+			opt[:time_range].append_to_query('happened_at', query)
+			@@collection.find(query)
+		end
 	end
 end

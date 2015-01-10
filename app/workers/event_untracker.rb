@@ -1,4 +1,5 @@
 require 'collections'
+require 'time_range'
 
 class EventUntracker
 	include Sidekiq::Worker
@@ -46,6 +47,21 @@ class EventUntracker
 			events = EventFinder.by_external_id({
 				:app_token => opt[:app_token],
 				:external_id => opt[:external_id]
+			})
+			events.each do |event|
+				untrack_event(event)
+			end
+			events.remove_all
+		end
+
+		# The time_range option is not a ruby object because the value
+		# needs to be put and pulled from redis, so a simple data structure
+		# will be much faster
+		if opt[:time_range]
+			time_range = TimeRange.new(opt[:time_range][:from], opt[:time_range][:to])
+			events = EventFinder.by_time_range({
+				:app_token => opt[:app_token],
+				:time_range => time_range
 			})
 			events.each do |event|
 				untrack_event(event)

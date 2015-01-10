@@ -199,4 +199,31 @@ describe EventFinder do
 			expect(events.count).to eq(1)
 		end
 	end
+
+	describe '.by_time_range' do
+		def track_events_4
+			track_event_at_time('visit page', {}, 1000, 'lpvasco')
+			track_event_at_time('click button', {}, 1001, 'luiz')
+			track_event_at_time('visit page', {}, 1002, 'lpvasco')
+			track_event_at_time('visit page', {}, 1003, 'fran')
+		end
+
+		it 'return all events that ocurred in the specified time' do
+			track_events_4
+			events = EventFinder.by_time_range({
+				:app_token => @app.token,
+				:time_range => TimeRange.new(1001, 1002)
+			})
+			expect(events.count).to eq(2)
+		end
+
+		it 'returns an empty collection if no event happened in the specified time' do
+			track_events_4
+			events = EventFinder.by_time_range({
+				:app_token => @app.token,
+				:time_range => TimeRange.new(1004, 1005)
+			})
+			expect(events.count).to eq(0)
+		end
+	end
 end

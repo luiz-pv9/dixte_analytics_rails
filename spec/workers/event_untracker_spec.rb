@@ -221,5 +221,46 @@ describe EventUntracker do
 		end
 	end
 
-	describe 'untracking by time range'
+	describe 'untracking by time range' do
+		def track_events_1
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'happened_at' => 1000,
+				'type' => 'click button',
+				'properties' => {'label' => 'what'}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'fran',
+				'happened_at' => 1001,
+				'type' => 'open modal',
+				'properties' => {'label' => 'what'}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'luiz',
+				'happened_at' => 1002,
+				'type' => 'open modal',
+				'properties' => {'label' => 'what'}
+			})
+			@event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'luiz',
+				'happened_at' => 1003,
+				'type' => 'open modal',
+				'properties' => {'label' => 'what'}
+			})
+		end
+
+		it 'untracks events that ocurred between the specified time range' do
+			track_events_1
+			expect {
+				@event_untracker.perform({
+					:app_token => @app.token,
+					:time_range => { :from => 1001, :to => 1002 }
+				})
+			}.to change { @events.find.count }.by(-2)
+		end
+	end
 end
