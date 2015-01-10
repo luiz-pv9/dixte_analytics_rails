@@ -38,7 +38,24 @@ class ProfileUntracker
 		if profile
 			untrack_properties(profile)
 			remove_profile(profile)
+			profile
+		else
+			false
 		end
+	end
+
+	def enqueue_event_untracking_for_profile(app_token, external_id)
+		EventUntracker.perform_async({
+			:app_token => app_token,
+			:external_id => external_id
+		})
+	end
+
+	def enqueue_event_untracking_for_profiles(app_token, external_ids)
+		EventUntracker.perform_async({
+			:app_token => app_token,
+			:external_ids => external_ids
+		})
 	end
 
 	# Since this is a Sidekiq::Worker, the perform method is the "entry point"
@@ -49,13 +66,16 @@ class ProfileUntracker
 	def perform(opt)
 		opt.symbolize_keys!
 		if opt[:external_id]
-			untrack_profile(opt[:app_token], opt[:external_id])
+			if untrack_profile(opt[:app_token], opt[:external_id])
+				enqueue_event_untracking_for_profile(opt[:app_token], opt[:external_id])
+			end
 		end
 
-		if opt[:external_ids]
-			opt[:external_ids].each do |external_id|
+		if opt[:external_ids] 
+			opt[:external_ids].each do |external_id| 
 				untrack_profile(opt[:app_token], external_id)
 			end
+			enqueue_event_untracking_for_profiles(opt[:app_token], opt[:external_ids])
 		end
 	end
 end
