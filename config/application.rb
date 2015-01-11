@@ -18,5 +18,6 @@ module Analytics
 		# Add Resque workers to the load path
 		config.autoload_paths += %W(#{config.root}/app/workers)
 		config.autoload_paths += %W(#{config.root}/app/finders)
+		config.autoload_paths += %W(#{config.root}/app/reports)
 	end
 end

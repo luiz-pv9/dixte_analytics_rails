@@ -55,5 +55,63 @@ describe TimeRange do
 			})
 		end
 	end
-	
+
+	describe 'steps' do
+		it 'generates an array of steps in hours' do
+			now = Time.now
+			time_range = TimeRange.new(now, now + 1.day)
+			expect(time_range.steps_in_hours.size).to eq(25)
+
+			time_range = TimeRange.new(now, now + 5.hours)
+			expect(time_range.steps_in_hours.size).to eq(6)
+		end
+
+		it 'generates an array of steps in days' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 11.days)
+			expect(time_range.steps_in_days.size).to eq(12)
+
+			now = Time.strptime('20/12/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 15.days)
+			expect(time_range.steps_in_days.size).to eq(16)
+		end
+
+		it 'generates an array of steps in weeks' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 1.month)
+			expect(time_range.steps_in_weeks.size).to eq(5)
+
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 2.months)
+			expect(time_range.steps_in_weeks.size).to eq(9)
+		end
+
+		it 'generates an array of steps in months' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 5.months)
+			expect(time_range.steps_in_months.size).to eq(6)
+
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 1.year)
+			expect(time_range.steps_in_months.size).to eq(13)
+		end
+
+		it 'generates an array of steps in trimesters' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 1.year)
+			expect(time_range.steps_in_trimesters.size).to eq(5)
+		end
+
+		it 'generates an array of steps in semesters' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 3.years)
+			expect(time_range.steps_in_semesters.size).to eq(7)
+		end
+
+		it 'generates an array of steps in years' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 3.years)
+			expect(time_range.steps_in_years.size).to eq(4)
+		end
+	end	
 end

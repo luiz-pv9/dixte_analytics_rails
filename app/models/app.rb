@@ -30,11 +30,7 @@ class App
 
 	# Metrics for the application
 	def events
-		EventFinder.by_time_range({
-			:app_token => token,
-			:time_range => TimeRange.new(Time.strptime('01/01/2000', '%d/%m/%Y'), 
-										 Time.strptime('01/01/2050', '%d/%m/%Y'))
-		})
+		EventFinder.by_app_token({:app_token => token})
 	end
 
 	def profiles

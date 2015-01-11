@@ -62,5 +62,11 @@ class EventFinder
 			opt[:time_range].append_to_query('happened_at', query)
 			@@collection.find(query)
 		end
+
+		def by_app_token(opt)
+			@@collection.find({
+				:app_token => opt[:app_token]
+			})
+		end
 	end
 end

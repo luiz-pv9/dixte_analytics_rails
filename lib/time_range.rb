@@ -56,4 +56,64 @@ class TimeRange
 	def append_to_query(key, query)
 		query.merge!(to_query(key))
 	end
+
+	def steps_by_interval(interval)
+		steps = [@from]
+		while steps.last <= @to
+			next_step = steps.last + interval
+			if next_step <= @to
+				steps << next_step
+			else
+				break
+			end
+		end
+		steps
+	end
+
+	def steps_in_hours
+		steps_by_interval 1.hour
+	end
+
+	def steps_in_days
+		steps_by_interval 1.day
+	end
+
+	def steps_in_weeks
+		steps_by_interval 7.days
+	end
+
+	def steps_in_months
+		steps_by_interval 1.month
+	end
+
+	def steps_in_trimesters
+		steps_by_interval 3.months
+	end
+
+	def steps_in_semesters
+		steps_by_interval 6.months
+	end
+
+	def steps_in_years
+		steps_by_interval 1.year
+	end
+
+	def steps_in(interval)
+		case interval
+		when 'hours'
+			steps_in_hours
+		when 'days'
+			steps_in_days
+		when 'weeks'
+			steps_in_weeks
+		when 'months'
+			steps_in_months
+		when 'trimesters'
+			steps_in_trimesters
+		when 'semesters'
+			steps_in_semesters
+		when 'years'
+			steps_in_years
+		end
+	end
 end
