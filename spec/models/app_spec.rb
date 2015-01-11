@@ -59,6 +59,7 @@ describe App do
 	describe 'metrics' do
 		before :each do
 			@event_tracker = EventTracker.new
+			@profile_tracker = ProfileTracker.new
 		end
 
 		it 'returns all events of the app' do
@@ -123,6 +124,27 @@ describe App do
 			expect(app_1.events_at_month('2014', '04').count).to eq(1)
 		end
 
-		it 'finds all profiles for the app'
+		it 'finds all profiles for the app' do
+			app_1 = App.create :name => 'Dixte'
+			app_2 = App.create :name => 'Foo'
+			@profile_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'lpvasco',
+				'properties' => {}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_2.token,
+				'external_id' => 'lpvasco',
+				'properties' => {}
+			})
+			@profile_tracker.perform({
+				'app_token' => app_1.token,
+				'external_id' => 'luizpv9',
+				'properties' => {}
+			})
+
+			expect(app_1.profiles.count).to eq(2)
+			expect(app_2.profiles.count).to eq(1)
+		end
 	end
 end
