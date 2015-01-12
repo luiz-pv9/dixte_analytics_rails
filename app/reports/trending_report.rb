@@ -1,3 +1,5 @@
+require 'time_range'
+
 class TrendingReport < ApplicationReport
 	def initialize(config)
 		@report = {}
@@ -7,7 +9,7 @@ class TrendingReport < ApplicationReport
 		load_events_types
 		load_events
 		detect_steps
-		detect_segments
+		detect_grouping
 	end
 
 	def load_events_types
@@ -33,18 +35,10 @@ class TrendingReport < ApplicationReport
 		end
 	end
 
-	def detect_steps
-		if @config['steps_in']
-			@report['steps'] = @time_range.steps_in(@config['steps_in'])
-		else
-			@report['steps'] = @time_range.recommended_steps
-		end
-	end
-
-	def detect_segments_total
+	def detect_grouping_total
 		@events.each do |key, events|
+			event_property = key
 			events.each do |event|
-				event_property = key
 				@report['series'][event_property] ||= []
 				index = closest_value_index(@report['steps'], event['happened_at'])
 				@report['series'][event_property][index] ||= 0
@@ -53,72 +47,56 @@ class TrendingReport < ApplicationReport
 		end
 	end
 
-	def detect_segments_average
-		pre_series = {}
-		@events.each do |event|
-			if @config['segment_on']
-				event_property = event['properties'][@config['segment_on']]
-			else
-				event_property = @config['event_type']
+	def detect_grouping_unique
+		@events.each do |key, events|
+			event_property = key
+			events.each do |event|
+				@report['series'][event_property] ||= []
+				index = closest_value_index(@report['steps'], event['happened_at'])
+				@report['series'][event_property][index] ||= []
+
+				if @report['series'][event_property][index].index(event['external_id']) == nil
+					@report['series'][event_property][index] << event['external_id']
+				end
 			end
-			event_property ||= 'null'
-
-			pre_series[event_property] ||= []
-			@report['series'][event_property] ||= []
-
-			index = closest_value_index(@report['steps'], event['happened_at'])
-			pre_series[event_property][index] ||= []
-
-			if pre_series[event_property][index].index(event['external_id']) == nil
-				pre_series[event_property][index] << event['external_id']
-			end
-
-			@report['series'][event_property][index] ||= 0
-			@report['series'][event_property][index] += 1
-		end
-
-		pre_series.each do |key, val|
-			average_series = @report['series'][key].zip(val)
-			@report['series'][key] = average_series.map do |con|
-				con[0].nil? ? 0 : con[0] / con[1].size
-			end
+			@report['series'][event_property] = @report['series'][event_property].map do |val|
+				val.nil? ? 0 : val.size
+			end 
 		end
 	end
 
-	def detect_segments_unique
-		pre_series = {}
-		@events.each do |event|
-			if @config['segment_on']
-				event_property = event['properties'][@config['segment_on']]
-			else
-				event_property = @config['event_type']
+	def detect_grouping_average
+		@events.each do |key, events|
+			event_property = key
+			totals = []
+			events.each do |event|
+				@report['series'][event_property] ||= []
+				index = closest_value_index(@report['steps'], event['happened_at'])
+				@report['series'][event_property][index] ||= []
+
+				if @report['series'][event_property][index].index(event['external_id']) == nil
+					@report['series'][event_property][index] << event['external_id']
+				end
+
+				totals[index] ||= 0
+				totals[index] += 1
 			end
-			event_property ||= 'null'
-			pre_series[event_property] ||= []
-
-			index = closest_value_index(@report['steps'], event['happened_at'])
-
-			pre_series[event_property][index] ||= []
-			if pre_series[event_property][index].index(event['external_id']) == nil
-				pre_series[event_property][index] << event['external_id']
-			end
-		end
-
-		pre_series.each do |key, val|
-			@report['series'][key] = val.map { |v| v.nil? ? 0 : v.size }
+			@report['series'][event_property] = @report['series'][event_property].map.with_index do |val, i|
+				val.nil? ? 0 : totals[i] / val.size
+			end 
 		end
 	end
 
-	def detect_segments
+	def detect_grouping
 		@report['series'] = {}
 		@config['grouping'] ||= 'total'
 		case @config['grouping']
 		when 'total'
-			detect_segments_total
+			detect_grouping_total
 		when 'unique'
-			detect_segments_unique
+			detect_grouping_unique
 		when 'average'
-			detect_segments_average
+			detect_grouping_average
 		end
 	end
 
