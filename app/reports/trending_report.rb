@@ -1,38 +1,55 @@
-require 'time_range'
-
-class SegmentationReport < ApplicationReport
-
+class TrendingReport < ApplicationReport
 	def initialize(config)
 		@report = {}
 		@config = config
 
 		load_time_range
+		load_events_types
 		load_events
 		detect_steps
 		detect_segments
 	end
 
+	def load_events_types
+		if @config['events_types']
+			@events_types = @config['events_types']
+		else
+			event_types = PropertyFinder.event_types(@config['app_token'])
+			values = event_types['properties']['type']['values']
+			@events_types = values.sort_by { |k, v| v }.first(4).map do |val|
+				val[0]
+			end
+		end
+	end
+
 	def load_events
-		@events = EventFinder.by_type_and_properties({
-			:app_token => @config['app_token'],
-			:time_range => @time_range,
-			:event_type => @config['event_type'],
-			:properties => @config['filters'] || {}
-		})
+		@events = {}
+		@events_types.each do |event_type|
+			@events[event_type] = EventFinder.by_type({
+				:app_token => @config['app_token'],
+				:type => event_type,
+				:time_range => @time_range
+			})
+		end
+	end
+
+	def detect_steps
+		if @config['steps_in']
+			@report['steps'] = @time_range.steps_in(@config['steps_in'])
+		else
+			@report['steps'] = @time_range.recommended_steps
+		end
 	end
 
 	def detect_segments_total
-		@events.each do |event|
-			if @config['segment_on']
-				event_property = event['properties'][@config['segment_on']]
-			else
-				event_property = @config['event_type']
+		@events.each do |key, events|
+			events.each do |event|
+				event_property = key
+				@report['series'][event_property] ||= []
+				index = closest_value_index(@report['steps'], event['happened_at'])
+				@report['series'][event_property][index] ||= 0
+				@report['series'][event_property][index] += 1
 			end
-			event_property ||= 'null'
-			@report['series'][event_property] ||= []
-			index = closest_value_index(@report['steps'], event['happened_at'])
-			@report['series'][event_property][index] ||= 0
-			@report['series'][event_property][index] += 1
 		end
 	end
 

@@ -59,7 +59,6 @@ describe SegmentationReport do
 		track_event('click button', '05/01/2014', {'label' => 'what'}, 'luizpv9')
 	end
 
-
 	describe 'format' do
 		it 'has a values hash with the key being the time and value the count for the property value' do
 			track_data_1
