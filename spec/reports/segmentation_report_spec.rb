@@ -313,4 +313,10 @@ describe SegmentationReport do
 			expect(report['steps'].size).to eq(1)
 		end
 	end
+
+	describe 'segmenting by a number' do
+	end
+
+	describe 'segmenting by an array of strings' do
+	end
 end
