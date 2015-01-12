@@ -35,7 +35,10 @@ class EventFinder
 				{'$lt' => :json_numeric_value},
 				{'$in' => [:json_simple_value]}
 			])
-			query = {'app_token' => opt[:app_token]}
+			query = {
+				'app_token' => opt[:app_token],
+				'type' => opt[:type]
+			}
 			properties.each do |key, val|
 				query["properties.#{key}"] = val
 			end

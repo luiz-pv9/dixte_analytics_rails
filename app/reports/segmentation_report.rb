@@ -16,7 +16,7 @@ class SegmentationReport < ApplicationReport
 		@events = EventFinder.by_type_and_properties({
 			:app_token => @config['app_token'],
 			:time_range => @time_range,
-			:event_type => @config['event_type'],
+			:type => @config['event_type'],
 			:properties => @config['filters'] || {}
 		})
 	end

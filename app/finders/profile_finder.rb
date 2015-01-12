@@ -43,6 +43,14 @@ class ProfileFinder
 			})
 		end
 
+		def by_external_ids(opt)
+			opt.symbolize_keys!
+			@@collection.find({
+				:app_token => opt[:app_token],
+				:external_id => {'$in' => opt[:external_ids]}
+			})
+		end
+
 		# Required keys =>
 		# :app_token
 		# :event_type

@@ -9,7 +9,6 @@ class ApplicationReport
 			@config['time_range']['to'])
 	end
 
-	
 	def detect_steps
 		if @config['steps_in']
 			@report['steps'] = @time_range.steps_in(@config['steps_in'])
