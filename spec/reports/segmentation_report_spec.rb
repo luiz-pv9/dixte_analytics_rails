@@ -178,12 +178,140 @@ describe SegmentationReport do
 	end
 
 	describe 'time interval' do
-		it 'generates the report on hour interval'
-		it 'generates the report on day interval'
-		it 'generates the report on week interval'
-		it 'generates the report on month interval'
-		it 'generates the report on trimester interval'
-		it 'generates the report on semester interval'
-		it 'generates the report on year interval'
+		it 'uses a default time interval if no interval is provided' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(12)
+		end
+
+		it 'generates the report on hour interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'hours',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			# 4 days + 1 hour for the first hour of the first day
+			expect(report['steps'].size).to eq(4 * 24 + 1)
+		end
+
+		it 'generates the report on day interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'days',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(5)
+		end
+
+		it 'generates the report on week interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'weeks',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(1)
+		end
+
+		it 'generates the report on month interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'months',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(1)
+		end
+
+		it 'generates the report on trimester interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'trimesters',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(1)
+		end
+
+		it 'generates the report on semester interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'semesters',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(1)
+		end
+
+		it 'generates the report on year interval' do
+			track_data_3
+			report = SegmentationReport.new({
+				'app_token' => @app.token,
+				'event_type' => 'click button',
+				'segment_on' => 'label',
+				'steps_in' => 'years',
+				'grouping' => 'average',
+				'time_range' => {
+					'from' => Time.strptime('01/01/2014', '%d/%m/%Y').to_i,
+					'to' => Time.strptime('05/01/2014', '%d/%m/%Y').to_i
+				}
+			}).to_json
+
+			expect(report['steps'].size).to eq(1)
+		end
 	end
 end

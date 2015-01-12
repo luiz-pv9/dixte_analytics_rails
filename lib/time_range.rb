@@ -116,4 +116,16 @@ class TimeRange
 			steps_in_years
 		end
 	end
+
+	# The chart should have 12 ticks at the most, and it's always better to have
+	# more details, so 12 ticks always.
+	# The division is by 11 because the first value (@from value) is included
+	# in the steps, so to be 12 ticks the difference must be divided by 11
+	def recommended_interval
+		(@to - @from) / 11
+	end
+
+	def recommended_steps
+		steps_by_interval(recommended_interval)
+	end
 end

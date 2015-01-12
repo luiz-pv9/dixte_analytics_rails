@@ -114,4 +114,20 @@ describe TimeRange do
 			expect(time_range.steps_in_years.size).to eq(4)
 		end
 	end	
+
+	describe '#recommended_steps' do
+		it 'have 15 steps no matter the time range' do
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 5.hours)
+			expect(time_range.recommended_steps.size).to eq(12)
+
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 50.days)
+			expect(time_range.recommended_steps.size).to eq(12)
+
+			now = Time.strptime('01/01/2015', '%d/%m/%Y')
+			time_range = TimeRange.new(now, now + 50.years)
+			expect(time_range.recommended_steps.size).to eq(12)
+		end
+	end
 end

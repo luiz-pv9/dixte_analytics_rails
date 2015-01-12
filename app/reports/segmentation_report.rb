@@ -1,3 +1,5 @@
+require 'time_range'
+
 class SegmentationReport < ApplicationReport
 
 	def initialize(config)
@@ -25,7 +27,11 @@ class SegmentationReport < ApplicationReport
 	end
 
 	def detect_steps
-		@report['steps'] = @time_range.steps_in(@config['steps_in'])
+		if @config['steps_in']
+			@report['steps'] = @time_range.steps_in(@config['steps_in'])
+		else
+			@report['steps'] = @time_range.recommended_steps
+		end
 	end
 
 	def detect_segments_total
@@ -70,7 +76,7 @@ class SegmentationReport < ApplicationReport
 		pre_series.each do |key, val|
 			average_series = @report['series'][key].zip(val)
 			@report['series'][key] = average_series.map do |con|
-				con[0] / con[1].size
+				con[0].nil? ? 0 : con[0] / con[1].size
 			end
 		end
 	end
@@ -95,7 +101,7 @@ class SegmentationReport < ApplicationReport
 		end
 
 		pre_series.each do |key, val|
-			@report['series'][key] = val.map { |v| v.size }
+			@report['series'][key] = val.map { |v| v.nil? ? 0 : v.size }
 		end
 	end
 
