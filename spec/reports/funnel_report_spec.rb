@@ -117,7 +117,7 @@ describe FunnelReport do
 		track_event('open signup modal', @now + 4.minute, {'size' => 'medium'}, 'lpvasco')
 
 		track_event('visit page', @now + 5.minute, {'source' => 'google'}, 'fran')
-		track_event('signup success', @now + 2.minutes, {}, 'fran')
+		track_event('signup success', @now + 6.minutes, {}, 'fran')
 
 	end
 
@@ -303,7 +303,7 @@ describe FunnelReport do
 				'app_token' => @app.token,
 				'time_range' => {
 					'from' => @now.to_i,
-					'to' => @now + 5.minutes
+					'to' => @now + 10.minutes
 				},
 				'steps' => ['visit page', 'open signup modal', 'signup success']
 			}).segment_by({

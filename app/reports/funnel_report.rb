@@ -98,6 +98,7 @@ class FunnelReport < ApplicationReport
 
 		counts = {}
 		events_at_step = Collections.query_to_array(events_at_step)
+		noticed_events_count = 0
 		current_events.each_with_index do |c_event, c_index|
 			match = events_at_step.find do |ps_e|
 				ps_e['external_id'] == c_event['external_id'] &&
@@ -107,6 +108,7 @@ class FunnelReport < ApplicationReport
 
 			if match
 				match["funnel_matched#{step}"] = true
+				noticed_events_count += 1
 				match['properties'][@@property_propagation_attribute] = 
 					c_event['properties'][property_to_segment]
 				counts[c_event['properties'][property_to_segment]] ||= 0
@@ -116,10 +118,10 @@ class FunnelReport < ApplicationReport
 			end
 		end
 
-		unnoticed_events = events_at_step.select do |doc|
-			!doc["funnel_matched#{step}"]
+		unnoticed_events = events_at_step.size - noticed_events_count
+		if unnoticed_events > 0
+			counts['undefined'] = unnoticed_events
 		end
-		counts['undefined'] = unnoticed_events.size
 
 		return {
 			:events => events_at_step,
