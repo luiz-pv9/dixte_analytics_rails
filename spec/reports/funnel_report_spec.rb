@@ -99,12 +99,26 @@ describe FunnelReport do
 	def track_6
 		@now = Time.now
 		track_event('visit page', @now, {'source' => 'facebook'}, 'lpvasco')
-		track_event('open signup modal', @now + 1.minute, {}, 'lpvasco')
+		track_event('open signup modal', @now + 1.minute, {'source' => 'facebook'}, 'lpvasco')
 
-		track_event('visit page', @now, {'source' => 'twitter'}, 'lpvasco')
-		track_event('open signup modal', @now + 1.minute, {}, 'lpvasco')
+		track_event('visit page', @now + 2.minute, {'source' => 'twitter'}, 'lpvasco')
+		track_event('open signup modal', @now + 3.minute, {'source' => 'twitter'}, 'lpvasco')
 
-		track_event('visit page', @now, {'source' => 'google'}, 'lpvasco')
+		track_event('visit page', @now + 4.minute, {'source' => 'google'}, 'lpvasco')
+	end
+
+	def track_7
+		@now = Time.now
+		track_event('visit page', @now, {'source' => 'facebook'}, 'lpvasco')
+		track_event('open signup modal', @now + 1.minute, {'size' => 'small'}, 'lpvasco')
+		track_event('signup success', @now + 2.minutes, {}, 'lpvasco')
+
+		track_event('visit page', @now + 3.minute, {'source' => 'twitter'}, 'lpvasco')
+		track_event('open signup modal', @now + 4.minute, {'size' => 'medium'}, 'lpvasco')
+
+		track_event('visit page', @now + 5.minute, {'source' => 'google'}, 'fran')
+		track_event('signup success', @now + 2.minutes, {}, 'fran')
+
 	end
 
 	describe 'funnel' do
@@ -241,7 +255,28 @@ describe FunnelReport do
 	end
 
 	describe 'segmentation' do
-		it 'calculates aonvertion rate segmented by a property' do
+		it 'calculates aonvertion rate segmented by a property in the final step' do
+			track_6
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 5.minutes
+				},
+				'steps' => ['visit page', 'open signup modal']
+			}).segment_by({
+				'step' => 1,
+				'property' => 'source'
+			})
+
+			expect(report).to eq({
+				'facebook' => [1, 1],
+				'twitter' => [1, 1],
+				'undefined' => [1]
+			})
+		end
+
+		it 'calculates convertion rate segmented by a property in the first step' do
 			track_6
 			report = FunnelReport.new({
 				'app_token' => @app.token,
@@ -258,16 +293,33 @@ describe FunnelReport do
 			expect(report).to eq({
 				'facebook' => [1, 1],
 				'twitter' => [1, 1],
-				'google' => [1, 0]
+				'google' => [1]
+			})
+		end
+
+		it 'calculates convertion rate segmented by a property in the middle' do
+			track_7
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 5.minutes
+				},
+				'steps' => ['visit page', 'open signup modal', 'signup success']
+			}).segment_by({
+				'step' => 1,
+				'property' => 'size'
+			})
+
+			expect(report).to eq({
+				'small' => [1, 1, 1],
+				'medium' => [1, 1],
+				'undefined' => [1]
 			})
 		end
 	end
 
 	describe 'actions in between steps' do
 		it 'finds the n most common events between two steps in the funnel'
-	end
-
-	describe 'allowed interval between steps' do
-		it 'may receive an array of intervals to filter the funnel'
 	end
 end
