@@ -19,8 +19,8 @@ class FunnelReport < ApplicationReport
 		events = funnel({:profiles_at_index => step_index})
 		external_ids = []
 		events.each do |event|
-			if external_ids.index(event[:external_id]) == nil
-				external_ids << event[:external_id]
+			if external_ids.index(event['external_id']) == nil
+				external_ids << event['external_id']
 			end
 		end
 		ProfileFinder.by_external_ids({
@@ -55,6 +55,16 @@ class FunnelReport < ApplicationReport
 			events = result[:events]
 			segment_by = @@property_propagation_attribute
 			results.unshift result[:counts]
+
+			# If the user want to see profiles...
+			if opt[:break_at] == step
+				result[:events]
+			end
+		end
+
+		# If the user want to see profiles...
+		if opt[:break_at] == segment_at
+			return original_events
 		end
 
 		# Pushing the step that has the property the person is looking to segment
@@ -67,8 +77,13 @@ class FunnelReport < ApplicationReport
 		down_range.each do |step|
 			result = step_down(step, @config['steps'][step], @config['filters'][step] || {}, segment_by, events)
 			events = result[:events]
-			segment_by = @@property_propagation_attribute
+			segment_by = @@property_propagation_attribute unless segment_by.nil?
 			results << result[:counts]
+
+			# If the user want to see profiles...
+			if opt[:break_at] == step
+				return result[:events]
+			end
 		end
 
 		report = {}
@@ -99,7 +114,7 @@ class FunnelReport < ApplicationReport
 		counts = {}
 		events_at_step = Collections.query_to_array(events_at_step)
 		noticed_events_count = 0
-		current_events.each_with_index do |c_event, c_index|
+		current_events.delete_if do |c_event|
 			match = events_at_step.find do |ps_e|
 				ps_e['external_id'] == c_event['external_id'] &&
 				ps_e['happened_at'] <= c_event['happened_at'] &&
@@ -113,9 +128,8 @@ class FunnelReport < ApplicationReport
 					c_event['properties'][property_to_segment]
 				counts[c_event['properties'][property_to_segment]] ||= 0
 				counts[c_event['properties'][property_to_segment]] += 1
-			else
-				current_events.delete_at(c_index)
 			end
+			!match
 		end
 
 		unnoticed_events = events_at_step.size - noticed_events_count
@@ -139,7 +153,8 @@ class FunnelReport < ApplicationReport
 
 		counts = {}
 		events_at_step = Collections.query_to_array(events_at_step)
-		events_at_step.each_with_index do |c_event, c_index|
+
+		events_at_step.delete_if do |c_event|
 			match = prev_events.find do |ps_e|
 				c_event['external_id'] == ps_e['external_id'] &&
 				c_event['happened_at'] >= ps_e['happened_at'] &&
@@ -152,9 +167,9 @@ class FunnelReport < ApplicationReport
 					match['properties'][property_to_segment]
 				counts[match['properties'][property_to_segment]] ||= 0
 				counts[match['properties'][property_to_segment]] += 1
-			else
-				events_at_step.delete_at(c_index)
 			end
+
+			!match
 		end
 
 		return {
@@ -164,53 +179,18 @@ class FunnelReport < ApplicationReport
 	end
 
 	def funnel(opt = {})
-		convergance = []
-		previous_step_events = []
-		first_step = true
-		@config['steps'].each_with_index do |step, index|
-			events_at_step = EventFinder.by_type_and_properties({
-				:app_token => @config['app_token'],
-				:time_range => @time_range,
-				:type => step,
-				:properties => @config['filters'][index] || {}
+		if opt[:profiles_at_index]
+			segment_by({
+				:step => 0,
+				:property => nil,
+				:break_at => opt[:profiles_at_index]
 			})
-
-			if first_step
-				events_at_step.each do |event|
-					previous_step_events << {
-						:external_id => event['external_id'],
-						:happened_at => event['happened_at']
-					}
-				end
-				convergance << events_at_step.count
-			else
-				current_step_events = []
-				count = 0
-				events_at_step.each do |event|
-					match = previous_step_events.find do |ps_e|
-						ps_e[:external_id] == event['external_id'] &&
-						ps_e[:happened_at] <= event['happened_at']
-					end
-					if match
-						current_step_events << {
-							:external_id => event['external_id'],
-							:happened_at => event['happened_at']
-						}
-						count += 1
-						previous_step_events.delete_at(previous_step_events.index(match))
-					end
-				end
-				convergance << count
-				previous_step_events = current_step_events
-			end
-			first_step = false
-
-			if opt[:profiles_at_index] != nil
-				if index == opt[:profiles_at_index]
-					return previous_step_events
-				end
-			end
+		else
+			result = segment_by({
+				:step => 0,
+				:property => nil
+			})
+			result[nil]
 		end
-		convergance
 	end
 end
