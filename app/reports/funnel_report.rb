@@ -40,7 +40,7 @@ class FunnelReport < ApplicationReport
 			:time_range => @time_range,
 			:type => @config['steps'][segment_at],
 			:properties => @config['filters'][segment_at] || {}
-		})
+		}).sort(:happened_at => 1)
 
 		events = Collections.query_to_array(events)
 		original_events = events
@@ -109,7 +109,7 @@ class FunnelReport < ApplicationReport
 			:time_range => @time_range,
 			:type => event_type,
 			:properties => event_filters
-		})
+		}).sort(:happened_at => 1)
 
 		counts = {}
 		events_at_step = Collections.query_to_array(events_at_step)
@@ -149,7 +149,7 @@ class FunnelReport < ApplicationReport
 			:time_range => @time_range,
 			:type => event_type,
 			:properties => event_filters
-		})
+		}).sort(:happened_at => 1)
 
 		counts = {}
 		events_at_step = Collections.query_to_array(events_at_step)

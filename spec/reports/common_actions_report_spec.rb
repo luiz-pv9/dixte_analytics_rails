@@ -44,7 +44,7 @@ describe CommonActionsReport do
 		track_event('click button', @now + 1.minute, {})
 		track_event('buy product', @now + 2.minutes, {})
 
-		track_event('visit home', @now + 3, {})
+		track_event('visit home', @now + 3.minute, {})
 		track_event('click button', @now + 4.minute, {})
 
 		track_event('visit home', @now + 5.minutes, {}, 'luizpv9')
@@ -98,6 +98,20 @@ describe CommonActionsReport do
 		track_event('buy product', @now + 15.minutes, {}, 'lpvasco')
 	end
 
+	def track_7
+		@now = Time.now
+		# This is gonna count
+		track_event('visit home', @now + 5.minutes, {}, 'luizpv9')
+		track_event('visit home', @now + 6.minutes, {}, 'luizpv9')
+		track_event('buy product', @now + 7.minutes, {}, 'luizpv9')
+
+		# This is not gonna count
+		track_event('visit home', @now + 7.minutes, {}, 'lpvasco')
+		track_event('visit home', @now + 9.minutes, {}, 'lpvasco')
+		track_event('check cart', @now + 10.minutes, {}, 'lpvasco')
+		track_event('buy product', @now + 15.minutes, {}, 'lpvasco')
+	end
+
 	describe 'format' do
 		it 'example 1' do
 			track_1
@@ -146,6 +160,23 @@ describe CommonActionsReport do
 
 			expect(report).to eq({
 				'open modal' => 1
+			})
+		end
+
+		it 'example 4 with same event happening in between' do
+			track_7
+			report = CommonActionsReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => (@now + 20.minutes).to_i
+				},
+				'events_between' => ['visit home', 'buy product']
+			}).common_actions
+
+			expect(report).to eq({
+				'visit home' => 2,
+				'check cart' => 1
 			})
 		end
 	end

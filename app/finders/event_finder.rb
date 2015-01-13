@@ -43,7 +43,7 @@ class EventFinder
 				query["properties.#{key}"] = val
 			end
 			opt[:time_range].append_to_query('happened_at', query)
-			@@collection.find(query).sort(:happened_at => 1)
+			@@collection.find(query)
 		end
 
 		# Required keys => 

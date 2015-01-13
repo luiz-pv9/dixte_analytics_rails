@@ -8,7 +8,7 @@ class CommonActionsReport < ApplicationReport
 		# The default time limit is a large amount of time so that it seems
 		# there is no time limit. I guess 90 years is enought
 		@config['time_limit'] ||= 90.years
-		
+
 		@edge_pairs = []
 		load_time_range
 	end
@@ -59,11 +59,10 @@ class CommonActionsReport < ApplicationReport
 	end
 
 	def happens_between_pair(event)
-		if event['type'] == @config['events_between'][0] || event['type'] == @config['events_between'][1] 
-			return false
-		end
+		return false if event['type'] == @config['events_between'][1]
 
 		@edge_pairs.find do |pair|
+			pair[:from]['_id'] != event['_id'] &&
 			pair[:from]['happened_at'] <= event['happened_at'] &&
 			pair[:to]['happened_at'] >= event['happened_at'] &&
 			pair[:external_id] == event['external_id']
@@ -76,7 +75,7 @@ class CommonActionsReport < ApplicationReport
 			:time_range => @time_range,
 			:type => @config['events_between'][0],
 			:properties => @config['filters'][0] || {}
-		})
+		}).sort(:happened_at => 1)
 		events.each do |event|
 			assign_to_pair(event)
 		end
@@ -88,7 +87,7 @@ class CommonActionsReport < ApplicationReport
 			:time_range => @time_range,
 			:type => @config['events_between'][1],
 			:properties => @config['filters'][1] || {}
-		})
+		}).sort(:happened_at => -1)
 		events.each do |event|
 			assign_to_pair(event)
 		end
