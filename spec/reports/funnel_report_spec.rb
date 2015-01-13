@@ -255,7 +255,7 @@ describe FunnelReport do
 	end
 
 	describe 'segmentation' do
-		it 'calculates aonvertion rate segmented by a property in the final step' do
+		it 'calculates convertion rate segmented by a property in the final step' do
 			track_6
 			report = FunnelReport.new({
 				'app_token' => @app.token,
@@ -317,9 +317,5 @@ describe FunnelReport do
 				'undefined' => [1]
 			})
 		end
-	end
-
-	describe 'actions in between steps' do
-		it 'finds the n most common events between two steps in the funnel'
 	end
 end
