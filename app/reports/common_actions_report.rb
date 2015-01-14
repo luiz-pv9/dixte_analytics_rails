@@ -25,6 +25,9 @@ class CommonActionsReport < ApplicationReport
 			prev_pair[:from] = event
 		else
 			@edge_pairs << {:from => event, :external_id => event['external_id']}
+			if @config['segment_for'] == @config['events_between'][0]
+				@edge_pairs.last[:property] = event['properties'][@config['segment_by']]
+			end
 		end
 	end
 
@@ -37,8 +40,9 @@ class CommonActionsReport < ApplicationReport
 
 		if prev_pair
 			prev_pair[:to] = event
-		else
-			@edge_pairs << {:to => event, :external_id => event['external_id']}
+			if @config['segment_for'] == @config['events_between'][1]
+				prev_pair[:property] = event['properties'][@config['segment_by']]
+			end
 		end
 	end
 
@@ -63,8 +67,8 @@ class CommonActionsReport < ApplicationReport
 
 		@edge_pairs.find do |pair|
 			pair[:from]['_id'] != event['_id'] &&
-			pair[:from]['happened_at'] <= event['happened_at'] &&
-			pair[:to]['happened_at'] >= event['happened_at'] &&
+			pair[:from]['happened_at'] < event['happened_at'] &&
+			pair[:to]['happened_at'] > event['happened_at'] &&
 			pair[:external_id] == event['external_id']
 		end
 	end
@@ -87,7 +91,7 @@ class CommonActionsReport < ApplicationReport
 			:time_range => @time_range,
 			:type => @config['events_between'][1],
 			:properties => @config['filters'][1] || {}
-		}).sort(:happened_at => -1)
+		}).sort(:happened_at => 1)
 		events.each do |event|
 			assign_to_pair(event)
 		end
@@ -106,10 +110,18 @@ class CommonActionsReport < ApplicationReport
 			:app_token => @config['app_token'],
 			:time_range => @time_range
 		})
+
 		events.each do |event|
-			if happens_between_pair(event)
-				common[event['type']] ||= 0
-				common[event['type']] += 1
+			pair = happens_between_pair(event)
+			if pair
+				if pair[:property]
+					common[pair[:property]] ||= {}
+					common[pair[:property]][event['type']] ||= 0
+					common[pair[:property]][event['type']] += 1
+				else
+					common[event['type']] ||= 0
+					common[event['type']] += 1
+				end
 			end
 		end
 		common

@@ -81,7 +81,7 @@ describe CommonActionsReport do
 		track_event('buy product', @now + 7.minutes, {'source' => 'google'}, 'luizpv9')
 
 		track_event('visit home', @now + 7.minutes, {}, 'lpvasco')
-		track_event('open modal', @now + 9.minutes, {}, 'lpvasco')
+		track_event('open modal', @now + 8.minutes, {}, 'lpvasco')
 		track_event('buy product', @now + 9.minutes, {'source' => 'twitter'}, 'lpvasco')
 	end
 
@@ -110,6 +110,20 @@ describe CommonActionsReport do
 		track_event('visit home', @now + 9.minutes, {}, 'lpvasco')
 		track_event('check cart', @now + 10.minutes, {}, 'lpvasco')
 		track_event('buy product', @now + 15.minutes, {}, 'lpvasco')
+	end
+
+	def track_8
+		@now = Time.now
+		# This is gonna count
+		track_event('visit home', @now + 5.minutes, {'source' => 'facebook'}, 'lpvasco')
+		track_event('open modal', @now + 6.minutes, {}, 'lpvasco')
+		track_event('buy product', @now + 7.minutes, {'type' => 'digital'}, 'lpvasco')
+
+		# This is not gonna count
+		track_event('visit home', @now + 7.minutes, {'source' => 'twitter'}, 'lpvasco')
+		track_event('click button', @now + 10.minutes, {}, 'lpvasco')
+		track_event('click button', @now + 11.minutes, {}, 'lpvasco')
+		track_event('buy product', @now + 15.minutes, {'type' => 'physical'}, 'lpvasco')
 	end
 
 	describe 'format' do
@@ -239,6 +253,54 @@ describe CommonActionsReport do
 
 			expect(report).to eq({
 				'open modal' => 1
+			})
+		end
+	end
+
+	describe 'segmenting by a property in the edges' do
+		it 'segments by a property in the first edge' do
+			track_8
+			report = CommonActionsReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => (@now + 20.minutes).to_i
+				},
+				'events_between' => ['visit home', 'buy product'],
+				'segment_for' => 'visit home',
+				'segment_by' => 'source'
+			}).common_actions
+
+			expect(report).to eq({
+				'facebook' => {
+					'open modal' => 1
+				},
+				'twitter' => {
+					'click button' => 2
+				}
+			})
+		end
+
+		it 'segments by a property in the second edge' do
+			track_8
+			report = CommonActionsReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => (@now + 20.minutes).to_i
+				},
+				'events_between' => ['visit home', 'buy product'],
+				'segment_for' => 'buy product',
+				'segment_by' => 'type'
+			}).common_actions
+
+			expect(report).to eq({
+				'digital' => {
+					'open modal' => 1
+				},
+				'physical' => {
+					'click button' => 2
+				}
 			})
 		end
 	end
