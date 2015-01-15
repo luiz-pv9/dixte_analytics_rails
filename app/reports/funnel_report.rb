@@ -16,7 +16,12 @@ class FunnelReport < ApplicationReport
 	end
 
 	def profiles_at_step(step_index)
-		events = funnel({:profiles_at_index => step_index})
+		events = segment_by({
+			:step => 0,
+			:property => nil,
+			:break_at=> step_index,
+			:events => true
+		}).last
 		external_ids = []
 		events.each do |event|
 			if external_ids.index(event['external_id']) == nil
@@ -54,21 +59,29 @@ class FunnelReport < ApplicationReport
 			result = step_up(step, @config['steps'][step], @config['filters'][step] || {}, segment_by, events)
 			events = result[:events]
 			segment_by = @@property_propagation_attribute
-			results.unshift result[:counts]
+			if opt[:events]
+				results.unshift result[:events]
+			else
+				results.unshift result[:counts]
+			end
 
 			# If the user want to see profiles...
 			if opt[:break_at] == step
-				result[:events]
+				return results
 			end
+		end
+
+		if opt[:events]
+			results << original_events
+		else
+			results << PropertySegmentation.new(original_events).segment_by_property(opt[:property])
 		end
 
 		# If the user want to see profiles...
 		if opt[:break_at] == segment_at
-			return original_events
+			return results
 		end
 
-		# Pushing the step that has the property the person is looking to segment
-		results << PropertySegmentation.new(original_events).segment_by_property(opt[:property])
 
 		events = original_events
 		segment_by = opt[:property]
@@ -78,11 +91,16 @@ class FunnelReport < ApplicationReport
 			result = step_down(step, @config['steps'][step], @config['filters'][step] || {}, segment_by, events)
 			events = result[:events]
 			segment_by = @@property_propagation_attribute unless segment_by.nil?
-			results << result[:counts]
+
+			if opt[:events]
+				results << result[:events]
+			else
+				results << result[:counts]
+			end
 
 			# If the user want to see profiles...
 			if opt[:break_at] == step
-				return result[:events]
+				return results
 			end
 		end
 
@@ -94,6 +112,85 @@ class FunnelReport < ApplicationReport
 			end
 		end
 		report
+	end
+
+	# Calculates the average from the previous step (details_at - 1) to the
+	# detailed step (details_at). The average time is calculate per property specified
+	# by the property parameter. The segment_at is necessary because the property
+	# may change because the details_at may not equals the segmentation step.
+	def average_time_from_previous_step(result, details_at, property, segment_at)
+		result[details_at-1].delete_if do |ev|
+			!ev["funnel_matched#{details_at-1}"]
+		end
+
+		previous_segment_property = segment_at == details_at - 1 ? property : @@property_propagation_attribute
+		current_segment_property = segment_at == details_at ? property : @@property_propagation_attribute
+
+		total_count = {}
+		total_times = {}
+		result[details_at-1].each do |event|
+			prop = event['properties'][previous_segment_property]
+			total_times[prop] ||= 0
+			total_times[prop] += event['happened_at']
+
+			total_count[prop] ||= 0
+			total_count[prop] += 1
+		end
+
+		end_count = {}
+		end_times = {}
+		result[details_at].each do |event|
+			prop = event['properties'][current_segment_property]
+			end_times[prop] ||= 0
+			end_times[prop] += event['happened_at']
+
+			end_count[prop] ||= 0
+			end_count[prop] += 1
+		end
+
+		averages = {}
+		total_times.each do |key, val|
+			averages[key] = {
+				:average_time_from_previous_step => (end_times[key] / end_count[key].to_f) - 
+					(val / total_count[key].to_f)
+			}
+		end
+		averages
+	end
+
+	def segmentation_details(opt)
+		details_at = opt['details_at']
+		result = segment_by({
+			:step => opt['step'],
+			:property => opt['property'],
+			:break_at => details_at,
+			:events => true
+		})
+
+		details = average_time_from_previous_step(result, 
+			details_at, opt['property'], opt['step'])
+
+		current_segment_property = segment_at == details_at ? property : @@property_propagation_attribute
+		next_segment_property = segment_at == details_at + 1 ? property : @@property_propagation_attribute
+
+		# Delete every event that hasnt being noticed in the current details_at
+		result[details_at].each do |ev|
+			next unless ev["funnel_matched#{details_at}"]
+			details[ev[current_segment_property]][:profiles_at_step] ||= []
+			
+			if details[ev[current_segment_property]][:profiles_at_step].index(ev['external_id']).nil?
+				details[ev[current_segment_property]][:profiles_at_step] << ev['external_id']
+			end
+		end
+
+		result[details_at+1].each do |ev|
+			next unless ev["funnel_matched#{details_at+1}"]
+			details[ev[next_segment_property]][:profiles_next_step] ||= []
+			
+			if details[ev[next_segment_property]][:profiles_next_step].index(ev['external_id']).nil?
+				details[ev[next_segment_property]][:profiles_next_step] << ev['external_id']
+			end
+		end
 	end
 
 	# This method is going to return a hash with the count for the current step
@@ -179,18 +276,10 @@ class FunnelReport < ApplicationReport
 	end
 
 	def funnel(opt = {})
-		if opt[:profiles_at_index]
-			segment_by({
-				:step => 0,
-				:property => nil,
-				:break_at => opt[:profiles_at_index]
-			})
-		else
-			result = segment_by({
-				:step => 0,
-				:property => nil
-			})
-			result[nil]
-		end
+		result = segment_by({
+			:step => 0,
+			:property => nil
+		})
+		result[nil]
 	end
 end

@@ -118,7 +118,6 @@ describe FunnelReport do
 
 		track_event('visit page', @now + 5.minute, {'source' => 'google'}, 'fran')
 		track_event('signup success', @now + 6.minutes, {}, 'fran')
-
 	end
 
 	describe 'funnel' do
@@ -317,5 +316,56 @@ describe FunnelReport do
 				'undefined' => [1]
 			})
 		end
+	end
+
+
+	def track_8
+		@now = Time.now
+		track_event('visit page', @now, {'source' => 'facebook'}, 'lpvasco')
+		track_event('open signup modal', @now + 1.minute, {'size' => 'small'}, 'lpvasco')
+		track_event('signup success', @now + 2.minutes, {}, 'lpvasco')
+
+		track_event('visit page', @now + 3.minute, {'source' => 'twitter'}, 'lpvasco')
+		track_event('open signup modal', @now + 5.minute, {'size' => 'medium'}, 'lpvasco')
+
+		track_event('visit page', @now + 5.minute, {'source' => 'google'}, 'fran')
+		track_event('signup success', @now + 6.minutes, {}, 'fran')
+	end
+
+	describe 'segmentation_details' do
+		it 'segments a funnel with details of profiles and time' do
+			track_8
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 5.minutes
+				},
+				'steps' => ['visit page', 'open signup modal', 'complete signup']
+			}).segmentation_details({
+				'step' => 1,
+				'property' => 'size',
+				'details_at' => 1
+			})
+
+			expect(report).to eq({
+				'small' => {
+					:profiles_at_step => 1,
+					:average_time_from_previous_step => 1.minute,
+					:profiles_next_step => 1
+				},
+				'medium' => {
+					:profiles_at_step => 1,
+					:average_time_from_previous_step => 2.minute,
+					:profiles_next_step => 0
+				},
+				'undefined' => {
+					:profiles_at_step => 0,
+					:profiles_next_step => 0
+				}
+			})
+		end
+
+		it 'finds the details of a step without segmenting by a property'
 	end
 end
