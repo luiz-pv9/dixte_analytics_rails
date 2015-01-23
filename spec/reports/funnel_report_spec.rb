@@ -341,7 +341,7 @@ describe FunnelReport do
 					'from' => @now.to_i,
 					'to' => @now + 5.minutes
 				},
-				'steps' => ['visit page', 'open signup modal', 'complete signup']
+				'steps' => ['visit page', 'open signup modal', 'signup success']
 			}).segmentation_details({
 				'step' => 1,
 				'property' => 'size',
@@ -356,12 +356,7 @@ describe FunnelReport do
 				},
 				'medium' => {
 					:profiles_at_step => 1,
-					:average_time_from_previous_step => 2.minute,
-					:profiles_next_step => 0
-				},
-				'undefined' => {
-					:profiles_at_step => 0,
-					:profiles_next_step => 0
+					:average_time_from_previous_step => 2.minute
 				}
 			})
 		end

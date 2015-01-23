@@ -104,14 +104,18 @@ class FunnelReport < ApplicationReport
 			end
 		end
 
-		report = {}
-		results.each do |key|
-			key.each do |prop, val|
-				report[prop] ||= []
-				report[prop] << val
+		if opt[:events]
+			results
+		else
+			report = {}
+			results.each do |key|
+				key.each do |prop, val|
+					report[prop] ||= []
+					report[prop] << val
+				end
 			end
+			report
 		end
-		report
 	end
 
 	# Calculates the average from the previous step (details_at - 1) to the
@@ -160,37 +164,48 @@ class FunnelReport < ApplicationReport
 
 	def segmentation_details(opt)
 		details_at = opt['details_at']
+		segment_at = opt['step']
 		result = segment_by({
 			:step => opt['step'],
 			:property => opt['property'],
-			:break_at => details_at,
 			:events => true
 		})
 
 		details = average_time_from_previous_step(result, 
 			details_at, opt['property'], opt['step'])
 
-		current_segment_property = segment_at == details_at ? property : @@property_propagation_attribute
-		next_segment_property = segment_at == details_at + 1 ? property : @@property_propagation_attribute
+		current_segment_property = segment_at == details_at ? opt['property'] : @@property_propagation_attribute
+		next_segment_property = segment_at == details_at + 1 ? opt['property'] : @@property_propagation_attribute
 
 		# Delete every event that hasnt being noticed in the current details_at
 		result[details_at].each do |ev|
-			next unless ev["funnel_matched#{details_at}"]
-			details[ev[current_segment_property]][:profiles_at_step] ||= []
-			
-			if details[ev[current_segment_property]][:profiles_at_step].index(ev['external_id']).nil?
-				details[ev[current_segment_property]][:profiles_at_step] << ev['external_id']
+			prop = ev['properties'][current_segment_property]
+			details[prop] ||= {}
+			details[prop][:profiles_at_step] ||= []
+
+			if details[prop][:profiles_at_step].index(ev['external_id']).nil?
+				details[prop][:profiles_at_step] << ev['external_id']
 			end
 		end
 
 		result[details_at+1].each do |ev|
-			next unless ev["funnel_matched#{details_at+1}"]
-			details[ev[next_segment_property]][:profiles_next_step] ||= []
-			
-			if details[ev[next_segment_property]][:profiles_next_step].index(ev['external_id']).nil?
-				details[ev[next_segment_property]][:profiles_next_step] << ev['external_id']
+			prop = ev['properties'][next_segment_property]
+			details[prop] ||= {}
+			details[prop][:profiles_next_step] ||= []
+
+			if details[prop][:profiles_next_step].index(ev['external_id']).nil?
+				details[prop][:profiles_next_step] << ev['external_id']
 			end
 		end
+
+		unless opt['profiles']
+			details.each do |key, val|
+				val[:profiles_at_step] = val[:profiles_at_step].size if val[:profiles_at_step]
+				val[:profiles_next_step] = val[:profiles_next_step].size if val[:profiles_next_step]
+			end
+		end
+
+		details
 	end
 
 	# This method is going to return a hash with the count for the current step
