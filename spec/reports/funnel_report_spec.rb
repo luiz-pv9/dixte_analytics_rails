@@ -325,8 +325,8 @@ describe FunnelReport do
 		track_event('open signup modal', @now + 1.minute, {'size' => 'small'}, 'lpvasco')
 		track_event('signup success', @now + 2.minutes, {}, 'lpvasco')
 
-		track_event('visit page', @now + 3.minute, {'source' => 'twitter'}, 'lpvasco')
-		track_event('open signup modal', @now + 5.minute, {'size' => 'medium'}, 'lpvasco')
+		track_event('visit page', @now + 3.minute, {'source' => 'twitter'}, 'luizpv9')
+		track_event('open signup modal', @now + 5.minute, {'size' => 'medium'}, 'luizpv9')
 
 		track_event('visit page', @now + 5.minute, {'source' => 'google'}, 'fran')
 		track_event('signup success', @now + 6.minutes, {}, 'fran')
@@ -361,6 +361,26 @@ describe FunnelReport do
 			})
 		end
 
-		it 'finds the details of a step without segmenting by a property'
+		it 'finds the details of a step without segmenting by a property' do
+			track_8
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 5.minutes
+				},
+				'steps' => ['visit page', 'open signup modal', 'signup success']
+			}).segmentation_details({
+				'details_at' => 1
+			})
+
+			expect(report).to eq({
+				nil => {
+					:profiles_at_step => 2,
+					:average_time_from_previous_step => (1.5).minute,
+					:profiles_next_step => 1
+				}
+			})
+		end
 	end
 end

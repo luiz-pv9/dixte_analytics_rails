@@ -164,15 +164,16 @@ class FunnelReport < ApplicationReport
 
 	def segmentation_details(opt)
 		details_at = opt['details_at']
-		segment_at = opt['step']
+		segment_at = opt['step'] || details_at
 		result = segment_by({
-			:step => opt['step'],
+			:step => segment_at,
 			:property => opt['property'],
+			:break_at => details_at + 1,
 			:events => true
 		})
 
 		details = average_time_from_previous_step(result, 
-			details_at, opt['property'], opt['step'])
+			details_at, opt['property'] || nil, segment_at)
 
 		current_segment_property = segment_at == details_at ? opt['property'] : @@property_propagation_attribute
 		next_segment_property = segment_at == details_at + 1 ? opt['property'] : @@property_propagation_attribute
@@ -204,7 +205,6 @@ class FunnelReport < ApplicationReport
 				val[:profiles_next_step] = val[:profiles_next_step].size if val[:profiles_next_step]
 			end
 		end
-
 		details
 	end
 
