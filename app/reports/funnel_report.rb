@@ -45,7 +45,7 @@ class FunnelReport < ApplicationReport
 			:time_range => @time_range,
 			:type => @config['steps'][segment_at],
 			:properties => @config['filters'][segment_at] || {}
-		}).sort(:happened_at => 1)
+		}).sort(:happened_at => opt[:happened_at_order] || 1)
 
 		events = Collections.query_to_array(events)
 		original_events = events
@@ -169,16 +169,20 @@ class FunnelReport < ApplicationReport
 			:step => segment_at,
 			:property => opt['property'],
 			:break_at => details_at + 1,
-			:events => true
+			:events => true,
+			:happened_at_order => -1
 		})
 
-		details = average_time_from_previous_step(result, 
-			details_at, opt['property'] || nil, segment_at)
+		if details_at > 0
+			details = average_time_from_previous_step(result, 
+				details_at, opt['property'] || nil, segment_at)
+		else
+			details = {}
+		end
 
 		current_segment_property = segment_at == details_at ? opt['property'] : @@property_propagation_attribute
 		next_segment_property = segment_at == details_at + 1 ? opt['property'] : @@property_propagation_attribute
 
-		# Delete every event that hasnt being noticed in the current details_at
 		result[details_at].each do |ev|
 			prop = ev['properties'][current_segment_property]
 			details[prop] ||= {}

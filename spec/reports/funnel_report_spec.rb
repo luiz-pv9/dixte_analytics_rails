@@ -382,5 +382,64 @@ describe FunnelReport do
 				}
 			})
 		end
+
+		def next_time
+			@n ||= 0
+			@n += 1
+			return @now + (@n.minute)
+		end
+
+		def track_9
+			@now = Time.now
+			track_event('read document', next_time, {'genre' => 'comedy'}, 'lpvasco')
+			track_event('rate document', next_time, {'stars' => '5'}, 'lpvasco')
+			track_event('leave comment', next_time, {'type' => 'html'}, 'lpvasco')
+
+			track_event('read document', next_time, {'genre' => 'horror'}, 'luizpv9')
+			track_event('rate document', next_time, {'stars' => '4'}, 'luizpv9')
+
+			track_event('read document', next_time, {'genre' => 'horror'}, 'fran')
+			track_event('leave comment', next_time, {'type' => 'plain'}, 'fran')
+
+			track_event('read document', next_time, {'genre' => 'adventure'}, 'fran')
+			track_event('rate document', next_time, {'stars' => '5'}, 'fran')
+			track_event('leave comment', next_time, {'type' => 'plain'}, 'fran')
+		end
+
+		it 'finds segmentation details in the first step' do
+			track_9
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 100.minutes
+				},
+				'steps' => ['read document', 'rate document', 'leave comment']
+			}).segmentation_details({
+				'step' => 0,
+				'property' => 'genre',
+				'details_at' => 0
+			})
+
+			expect(report).to eq({
+				'comedy' => {
+					:profiles_at_step => 1,
+					:profiles_next_step => 1
+				},
+				'horror' => {
+					:profiles_at_step => 2,
+					:profiles_next_step => 1
+				},
+				'adventure' => {
+					:profiles_at_step => 1,
+					:profiles_next_step => 1
+				}
+			})
+		end
+
+		it 'finds segmentation details in the first step segmenting by a property in other step'
+		it 'finds segmentation details in the first step without a property'
+		it 'finds segmentation details in the last step'
+		it 'finds segmentation details in the last step without a property'
 	end
 end
