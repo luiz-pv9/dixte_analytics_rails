@@ -467,7 +467,27 @@ describe FunnelReport do
 			})
 		end
 
-		it 'finds segmentation details in the first step without a property'
+		it 'finds segmentation details in the first step without a property' do
+			track_9
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 100.minutes
+				},
+				'steps' => ['read document', 'rate document', 'leave comment']
+			}).segmentation_details({
+				'details_at' => 0
+			})
+
+			expect(report).to eq({
+				nil => {
+					:profiles_at_step => 3,
+					:profiles_next_step => 3
+				}
+			})
+		end
+
 		it 'finds segmentation details in the last step'
 		it 'finds segmentation details in the last step without a property'
 	end
