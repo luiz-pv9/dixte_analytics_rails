@@ -437,7 +437,36 @@ describe FunnelReport do
 			})
 		end
 
-		it 'finds segmentation details in the first step segmenting by a property in other step'
+		it 'finds segmentation details in the first step segmenting by a property in other step' do
+			track_9
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 100.minutes
+				},
+				'steps' => ['read document', 'rate document', 'leave comment']
+			}).segmentation_details({
+				'step' => 1,
+				'property' => 'stars',
+				'details_at' => 0
+			})
+
+			expect(report).to eq({
+				'5' => {
+					:profiles_at_step => 2,
+					:profiles_next_step => 2
+				},
+				'4' => {
+					:profiles_at_step => 1,
+					:profiles_next_step => 1
+				},
+				nil => {
+					:profiles_at_step => 1
+				}
+			})
+		end
+
 		it 'finds segmentation details in the first step without a property'
 		it 'finds segmentation details in the last step'
 		it 'finds segmentation details in the last step without a property'
