@@ -103,5 +103,18 @@ describe PropertyTracker do
 			})
 		end
 	end
+	
+	describe 'large amount of values' do
+		it 'accepts value normally until the values goes over max size'
+	end
+
+	describe 'tracking value once dealing with large collections' do
+		it 'increments the counter * if the collection is large'
+	end
+
+	describe 'number tracking' do
+		it 'stores numbers the same way as strings'
+		it 'replaces with * once the number collection goes large (above max size)'
+	end
 end
 
