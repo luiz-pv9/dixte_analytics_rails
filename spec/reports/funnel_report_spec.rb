@@ -488,7 +488,75 @@ describe FunnelReport do
 			})
 		end
 
-		it 'finds segmentation details in the last step'
-		it 'finds segmentation details in the last step without a property'
+		it 'finds segmentation details in the last step' do
+			track_9
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 100.minutes
+				},
+				'steps' => ['read document', 'rate document', 'leave comment']
+			}).segmentation_details({
+				'details_at' => 2,
+				'step' => 2,
+				'property' => 'type'
+			})
+
+			expect(report).to eq({
+				'plain' => {
+					:profiles_at_step => 1,
+					:average_time_from_previous_step => 1.minute
+				},
+				'html' => {
+					:profiles_at_step => 1,
+					:average_time_from_previous_step => 1.minute
+				}
+			})
+		end
+
+		it 'finds segmentation details in the last step without a property' do
+			track_9
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 100.minutes
+				},
+				'steps' => ['read document', 'rate document', 'leave comment']
+			}).segmentation_details({
+				'details_at' => 2
+			})
+
+			expect(report).to eq({
+				nil => {
+					:profiles_at_step => 2,
+					:average_time_from_previous_step => 1.minute
+				}
+			})
+		end
+
+		it 'finds segmentation details in the step segmenting by a property in a previous step' do
+			track_9
+			report = FunnelReport.new({
+				'app_token' => @app.token,
+				'time_range' => {
+					'from' => @now.to_i,
+					'to' => @now + 100.minutes
+				},
+				'steps' => ['read document', 'rate document', 'leave comment']
+			}).segmentation_details({
+				'details_at' => 2,
+				'step' => 1,
+				'property' => 'stars'
+			})
+
+			expect(report).to eq({
+				'5' => {
+					:profiles_at_step => 2,
+					:average_time_from_previous_step => 1.minute
+				}
+			})
+		end
 	end
 end

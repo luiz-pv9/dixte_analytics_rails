@@ -72,6 +72,9 @@ class FunnelReport < ApplicationReport
 		end
 
 		if opt[:events]
+			original_events.each do |ev|
+				ev["funnel_matched#{segment_at}"] = true
+			end
 			results << original_events
 		else
 			results << PropertySegmentation.new(original_events).segment_by_property(opt[:property])
@@ -154,6 +157,7 @@ class FunnelReport < ApplicationReport
 
 		averages = {}
 		total_times.each do |key, val|
+			next unless val && end_times[key] && end_count[key] && total_count[key]
 			averages[key] = {
 				:average_time_from_previous_step => (end_times[key] / end_count[key].to_f) - 
 					(val / total_count[key].to_f)
@@ -180,6 +184,7 @@ class FunnelReport < ApplicationReport
 			details = {}
 		end
 
+
 		current_segment_property = segment_at == details_at ? opt['property'] : @@property_propagation_attribute
 		next_segment_property = segment_at == details_at + 1 ? opt['property'] : @@property_propagation_attribute
 
@@ -193,7 +198,7 @@ class FunnelReport < ApplicationReport
 			end
 		end
 
-		result[details_at+1].each do |ev|
+		(result[details_at+1] || []).each do |ev|
 			prop = ev['properties'][next_segment_property]
 			details[prop] ||= {}
 			details[prop][:profiles_next_step] ||= []
@@ -245,6 +250,7 @@ class FunnelReport < ApplicationReport
 				counts[c_event['properties'][property_to_segment]] ||= 0
 				counts[c_event['properties'][property_to_segment]] += 1
 			end
+
 			!match
 		end
 
