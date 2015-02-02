@@ -71,4 +71,17 @@ describe Property do
 			end
 		end
 	end
+
+	describe 'values size' do
+		it 'counts the number of properties' do
+			property = Property.new({
+				'properties' => {
+					'a' => {},
+					'b' => {},
+					'c' => {}
+				}
+			})
+			expect(property.number_of_values).to eq(3)
+		end
+	end
 end

@@ -9,6 +9,17 @@ require 'property_key'
 class PropertyTracker
 	attr_reader :key, :properties
 	@@collection = Collections::Properties.collection
+	@@limit_size = 50
+
+	class << self
+		def limit_size=(n)
+			@@limit_size = n
+		end
+
+		def limit_size
+			@@limit_size
+		end
+	end
 
 	def initialize(key, properties)
 		@key = PropertyKey.normalize(key)

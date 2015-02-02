@@ -104,8 +104,26 @@ describe PropertyTracker do
 		end
 	end
 	
+	def track_n(n)
+		0.upto(n-1) do |val|
+			property_tracker = PropertyTracker.new('foo', {'val' => val.to_s})
+			property_tracker.track!
+		end
+	end
+
 	describe 'large amount of values' do
-		it 'accepts value normally until the values goes over max size'
+		it 'accepts value normally until the values goes over max size' do
+			PropertyTracker.limit_size = 20
+
+			track_n(20)
+			p = PropertyFinder.by_key('foo')
+			expect(p['properties']['val']['values'].size).to eq(20)
+
+			property_tracker = PropertyTracker.new('foo', {'val' => '100'})
+			property_tracker.track!
+			expect(p['properties']['val']['values'].size).to eq(1)
+			expect(p['properties']['val']['values']['*']).to eq(21)
+		end
 	end
 
 	describe 'tracking value once dealing with large collections' do

@@ -52,6 +52,18 @@ class Property
 		end
 	end
 
+	def number_of_values(property = nil)
+		if property
+			@data && @data['properties'] && @data['properties'][property].size
+		else
+			@data && @data['properties'] && @data['properties'].size
+		end
+	end
+
+	def has_a_large_collection(property)
+		number_of_values(property) && number_of_values(property) >= PropertyTracker.limit_size
+	end
+
 	# If the value (second parameter) is specified, returns the count
 	# reference for the specified value in the specified property.
 	# If the value is not specified, returns a map of all values
