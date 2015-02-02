@@ -52,4 +52,5 @@ It's also possible to view the segmentation by total count, unique by user and a
 Given a time range and steps of events, shows where in the steps the users stop executing the next action. It is possible to view details about the funnel, such as number of profiles in a given step, average time from the previous step and segment the funnel by a property in any step.
 
 * Common actions report
+
 Given a time range and two events, shows the most common actions users do between those events.
