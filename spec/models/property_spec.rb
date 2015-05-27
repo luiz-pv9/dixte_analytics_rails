@@ -84,4 +84,32 @@ describe Property do
 			expect(property.number_of_values).to eq(3)
 		end
 	end
+
+  describe '.max_properties' do
+    it 'has a default value of 50' do
+      expect(Property.max_properties).to eq(50)
+    end
+
+    it 'has a setter to override' do
+      Property.max_properties = 10
+      expect(Property.max_properties).to eq(10)
+    end
+  end
+
+  describe '.has_large_property' do
+    it 'returns true if the property has more values than max allowed' do
+      prop = Property.new({
+        'properties' => {
+          'name' => {
+            'type' => 'string',
+            'values' => {
+              '1' => 1, '2' => 1, '3' => 1, '4' => 1, '5' => 1
+            }
+          }
+        }
+      })
+    end
+
+    it 'returns false if the property has less values than max allowed'
+  end
 end

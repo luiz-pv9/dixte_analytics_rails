@@ -8,18 +8,8 @@ require 'property_key'
 # the queries sent to MongoDB, the Moped driver is used instead of the Mongoid.
 class PropertyTracker
 	attr_reader :key, :properties
+
 	@@collection = Collections::Properties.collection
-	@@limit_size = 50
-
-	class << self
-		def limit_size=(n)
-			@@limit_size = n
-		end
-
-		def limit_size
-			@@limit_size
-		end
-	end
 
 	def initialize(key, properties)
 		@key = PropertyKey.normalize(key)
@@ -30,7 +20,7 @@ class PropertyTracker
 	end
 
 	def save!(force_update_types = false)
-		document = @@collection.find(:key => @key).first
+		document = PropertyFinder.by_key(@key)
 		unless document
 			document = {'key' => @key, 'properties' => {}}
 			@@collection.insert(document)

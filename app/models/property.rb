@@ -5,6 +5,11 @@
 class Property
 	attr_reader :data
 
+	@max_properties = 50
+	class << self
+    attr_accessor :max_properties
+	end
+
 	def initialize(data)
 		@data = data
 	end
@@ -15,8 +20,8 @@ class Property
 		@data && @data['properties'] && @data['properties'][property_name]
 	end
 
-	# Returns the key of the property
-	def key
+	# Returns the key of the property def key
+  def key
 		@data && @data['key']
 	end
 
@@ -59,6 +64,10 @@ class Property
 			@data && @data['properties'] && @data['properties'].size
 		end
 	end
+
+  def is_property_large(property)
+    number_of_values >= @max_properties
+  end
 
 	def has_a_large_collection(property)
 		number_of_values(property) && number_of_values(property) >= PropertyTracker.limit_size

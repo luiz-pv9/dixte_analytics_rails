@@ -17,7 +17,7 @@ describe PropertyTracker do
 	describe 'saving propreties to the database' do
 		before :each do
 			@collection = Collections::Properties.collection
-			@collection.find({}).remove_all
+      delete_all()
 		end
 
 		it 'tracks the specified properties and persists it to the database' do
@@ -57,7 +57,7 @@ describe PropertyTracker do
 					'synced' => {
 						'type' => 'boolean',
 						'values' => {
-							'*' => 1
+							'false' => 1
 						}
 					}
 				}
@@ -102,6 +102,22 @@ describe PropertyTracker do
 				}
 			})
 		end
+
+    it 'tracks numbers and booleans as strings' do
+      PropertyTracker.new('foo', {'age' => 20}).save!
+      PropertyTracker.new('foo', {'admin' => true}).save!
+      PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
+
+      doc = PropertyFinder.by_key('foo')
+      expect(doc['properties']['age']['type']).to eq('number')
+      expect(doc['properties']['age']['values']['20']).to eq(1)
+
+      expect(doc['properties']['admin']['type']).to eq('boolean')
+      expect(doc['properties']['admin']['values']['true']).to eq(1)
+
+      expect(doc['properties']['name']['type']).to eq('string')
+      expect(doc['properties']['name']['values']['Luiz']).to eq(1)
+    end
 	end
 	
 	def track_n(n)
