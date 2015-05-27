@@ -83,6 +83,42 @@ describe Property do
 			})
 			expect(property.number_of_values).to eq(3)
 		end
+
+    it 'counts the number of values of a property' do
+      prop = Property.new({
+        'properties' => {
+          'name' => {
+            'type' => 'string',
+            'values' => {
+              'a' => 1, 'b' => 2
+            }
+          }
+        }
+      })
+      
+      expect(prop.number_of_values('name')).to eq(2)
+
+      prop = Property.new({
+        'properties' => {
+          'name' => {
+            'type' => 'string',
+            'values' => {
+              'a' => 1, 'b' => 2, 'c' => 3, 'd' => 4
+            }
+          },
+          'type' => {
+            'type' => 'string',
+            'values' => {
+              'a' => 1, 'b' => 2
+            }
+          }
+        }
+      })
+
+      expect(prop.number_of_values('name')).to eq(4)
+      expect(prop.number_of_values('type')).to eq(2)
+      expect(prop.number_of_values('age')).to eq(0)
+    end
 	end
 
   describe '.max_properties' do
@@ -96,8 +132,8 @@ describe Property do
     end
   end
 
-  describe '.has_large_property' do
-    it 'returns true if the property has more values than max allowed' do
+  describe '.has_large_collection' do
+    it 'compares the number of values against Property.max_properties' do
       prop = Property.new({
         'properties' => {
           'name' => {
@@ -108,8 +144,37 @@ describe Property do
           }
         }
       })
+      Property.max_properties = 6
+      expect(prop.has_large_collection('name')).to be(false)
+      Property.max_properties = 5
+      expect(prop.has_large_collection('name')).to be(true)
     end
+  end
 
-    it 'returns false if the property has less values than max allowed'
+  describe '.has_large_collection_flag' do
+    it 'returns true if the flag is present. false if not or false' do
+      prop = Property.new({
+        'properties' => {
+          'name' => {
+            'type' => 'string',
+            'is_large' => true,
+            'values' => {}
+          },
+          'age' => {
+            'type' => 'number',
+            'is_large' => false,
+            'values' => {}
+          },
+          'admin' => {
+            'type' => 'boolean',
+            'values' => {}
+          }
+        }
+      })
+      expect(prop.has_large_collection_flag('name')).to be(true)
+      expect(prop.has_large_collection_flag('age')).to be_falsy
+      expect(prop.has_large_collection_flag('admin')).to be_falsy
+      expect(prop.has_large_collection_flag('color')).to be_falsy
+    end
   end
 end

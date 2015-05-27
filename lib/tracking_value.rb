@@ -3,7 +3,7 @@ require 'data_detector'
 # TrackingValue is responsible for converting values to store
 # in the properties collection.
 class TrackingValue
-	@@non_string_track_value = '*'
+	@non_string_track_value = '*'
 
 	attr_accessor :value, :type
 
@@ -22,9 +22,9 @@ class TrackingValue
 			if val.is_a? String
 				val
 			else
-				@@non_string_track_value
+        TrackingValue.non_string_track_value
 			end
 		end) if @type == :array
-		return [@@non_string_track_value]
+		return [TrackingValue.non_string_track_value]
 	end
 end

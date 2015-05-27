@@ -2,6 +2,12 @@ require 'rails_helper'
 require 'collections'
 
 describe PropertyTracker do
+
+  before :each do
+    @collection = Collections::Properties.collection
+    delete_all()
+  end
+
 	describe 'instantiating with an array as the key' do
 		it 'accepts array as the key' do
 			property_tracker = PropertyTracker.new ['foo', 'bar'], {}
@@ -15,11 +21,6 @@ describe PropertyTracker do
 	end
 	
 	describe 'saving propreties to the database' do
-		before :each do
-			@collection = Collections::Properties.collection
-      delete_all()
-		end
-
 		it 'tracks the specified properties and persists it to the database' do
 			property_tracker = PropertyTracker.new 'foo', {'name' => 'Luiz'}
 			property_tracker.save!
@@ -129,26 +130,64 @@ describe PropertyTracker do
 
 	describe 'large amount of values' do
 		it 'accepts value normally until the values goes over max size' do
-			PropertyTracker.limit_size = 20
-
-			track_n(20)
+      Property.max_properties = 5
+			track_n(5)
 			p = PropertyFinder.by_key('foo')
-			expect(p['properties']['val']['values'].size).to eq(20)
 
+			expect(p['properties']['val']['values'].size).to eq(5)
+
+      # Tracking the 6th value
 			property_tracker = PropertyTracker.new('foo', {'val' => '100'})
 			property_tracker.track!
+
+			p = PropertyFinder.by_key('foo')
+      # Everything should be one reference now
 			expect(p['properties']['val']['values'].size).to eq(1)
-			expect(p['properties']['val']['values']['*']).to eq(21)
+			expect(p['properties']['val']['values']['*']).to eq(6)
 		end
-	end
 
-	describe 'tracking value once dealing with large collections' do
-		it 'increments the counter * if the collection is large'
-	end
+    it 'works with array values' do
+      Property.max_properties = 3
+      PropertyTracker.new('foo', {'colors' => ['red', 'green', 'blue']}).track!
 
-	describe 'number tracking' do
-		it 'stores numbers the same way as strings'
-		it 'replaces with * once the number collection goes large (above max size)'
+			p = PropertyFinder.by_key('foo')
+			expect(p['properties']['colors']['values'].size).to eq(3)
+
+      PropertyTracker.new('foo', {'colors' => ['yellow', 'purple']}).track!
+
+			p = PropertyFinder.by_key('foo')
+			expect(p['properties']['colors']['values'].size).to eq(1)
+			expect(p['properties']['colors']['values']['*']).to eq(5)
+    end
+
+    it 'increments the placeholder once its a large collection' do
+      Property.max_properties = 3
+      # Normal collection
+      PropertyTracker.new('foo', {'colors' => ['red', 'green', 'blue']}).track!
+
+      # Converts to a large collection
+      PropertyTracker.new('foo', {'colors' => ['yellow', 'purple']}).track!
+
+      # Adds to the large collection
+      PropertyTracker.new('foo', {'colors' => ['black']}).track!
+
+			p = PropertyFinder.by_key('foo')
+			expect(p['properties']['colors']['values'].size).to eq(1)
+			expect(p['properties']['colors']['values']['*']).to eq(6)
+    end
+
+    it 'treats other properties normally alongside a large collection' do
+      Property.max_properties = 3
+      PropertyTracker.new('foo', {'colors' => ['red', 'blue', 'yellow']}).track!
+      PropertyTracker.new('foo', {'colors' => ['white'], 'name' => 'Luiz'}).track!
+
+      p = Property.new(PropertyFinder.by_key('foo'))
+      expect(p.value_count('colors')).to eq(4)
+      expect(p.number_of_values('colors')).to eq(1)
+      expect(p.value_count('name')).to eq(1)
+      expect(p.number_of_values('name')).to eq(1)
+      expect(p.value_count('name', 'Luiz')).to eq(1)
+    end
 	end
 end
 

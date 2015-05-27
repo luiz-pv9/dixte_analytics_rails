@@ -33,10 +33,33 @@ class PropertyTracker
 				update_query['$set'] ||= {}
 				update_query['$set']["properties.#{p}.type"] = v.type.to_s
 			end
-			v.to_track_value.each do |v_val|
-				update_query['$inc'] ||= {}
-				update_query['$inc']["properties.#{p}.values.#{v_val}"] = 1
-			end
+
+      if property.has_large_collection_flag(p)
+        # Already has a large collection. Just need to increment the * character.
+        update_query['$inc'] ||= {}
+        update_query['$inc']["properties.#{p}.values.#{TrackingValue.non_string_track_value}"] = v.to_track_value.size
+      elsif property.has_large_collection(p)
+        # Needs to convert from a regular collection to a large
+        # collection
+
+        # New value to replace previous collection
+        values_count = property.value_count(p) + v.to_track_value.size
+
+        # Replace all values with a '*'
+        update_query['$set'] ||= {}
+
+        # Setting this flag will make property.has_large_collection_flag
+        # return true
+        update_query['$set']["properties.#{p}.is_large"] = true
+        update_query['$set']["properties.#{p}.values"] = {
+          TrackingValue.non_string_track_value => values_count
+        }
+      else
+        v.to_track_value.each do |v_val|
+          update_query['$inc'] ||= {}
+          update_query['$inc']["properties.#{p}.values.#{v_val}"] = 1
+        end
+      end
 		end
 		@@collection.find({'key' => @key}).update(update_query)
 	end

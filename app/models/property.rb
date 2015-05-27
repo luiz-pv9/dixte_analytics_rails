@@ -6,6 +6,7 @@ class Property
 	attr_reader :data
 
 	@max_properties = 50
+
 	class << self
     attr_accessor :max_properties
 	end
@@ -59,19 +60,22 @@ class Property
 
 	def number_of_values(property = nil)
 		if property
-			@data && @data['properties'] && @data['properties'][property].size
+			prop = @data && @data['properties'] && @data['properties'][property]
+      return 0 unless prop
+      return prop['values'].size
 		else
 			@data && @data['properties'] && @data['properties'].size
 		end
 	end
 
-  def is_property_large(property)
-    number_of_values >= @max_properties
-  end
-
-	def has_a_large_collection(property)
-		number_of_values(property) && number_of_values(property) >= PropertyTracker.limit_size
+	def has_large_collection(property)
+		has_large_collection_flag(property) || number_of_values(property) >= Property.max_properties
 	end
+
+  def has_large_collection_flag(property)
+	  prop = @data && @data['properties'] && @data['properties'][property]
+    return prop && prop['is_large'] == true
+  end
 
 	# If the value (second parameter) is specified, returns the count
 	# reference for the specified value in the specified property.

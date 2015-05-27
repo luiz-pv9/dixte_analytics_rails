@@ -2,6 +2,11 @@ require 'rails_helper'
 require 'collections'
 
 describe PropertyUntracker do
+  before :each do
+    @collection = Collections::Properties.collection
+    @collection.find({}).remove_all
+  end
+
 	describe 'instantiating' do
 		it 'creates a PropertyUntracker instance' do
 			property_untracker = PropertyUntracker.new('foo', {})
@@ -15,11 +20,6 @@ describe PropertyUntracker do
 	end
 
 	describe '.save! (untracking)' do
-		before :each do
-			@collection = Collections::Properties.collection
-			@collection.find({}).remove_all
-		end
-
 		it 'decrements the counter of a property if it is greater than one' do
 			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
 			PropertyTracker.new('foo', {'name' => 'Luiz'}).save!
@@ -77,7 +77,7 @@ describe PropertyUntracker do
 					'age' => {
 						'type' => 'number',
 						'values' => {
-							'*' => 1
+							'20' => 1
 						}
 					}
 				}
@@ -130,4 +130,16 @@ describe PropertyUntracker do
 			expect(@collection.find.count).to eq(0)
 		end
 	end
+
+  describe 'large collections' do
+    it 'untracks a large collection value' do
+      Property.max_properties = 2
+      PropertyTracker.new('foo', {'colors' => ['red', 'green']}).track!
+      PropertyTracker.new('foo', {'colors' => ['blue']}).track! # large collection
+
+      PropertyUntracker.new('foo', {'colors' => 'red'}).untrack!
+    end
+
+    it 'sets the is_large flag to false if values reaches zero'
+  end
 end
