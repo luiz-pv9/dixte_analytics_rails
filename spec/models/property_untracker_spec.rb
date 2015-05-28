@@ -4,7 +4,7 @@ require 'collections'
 describe PropertyUntracker do
   before :each do
     @collection = Collections::Properties.collection
-    @collection.find({}).remove_all
+    delete_all
   end
 
 	describe 'instantiating' do
@@ -27,19 +27,8 @@ describe PropertyUntracker do
 			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
 
 			expect(@collection.find.count).to eq(1)
-			doc = @collection.find.first
-			expect(doc).to eq({
-				'_id' => doc['_id'],
-				'key' => 'foo',
-				'properties' => {
-					'name' => {
-						'type' => 'string',
-						'values' => {
-							'Luiz' => 1
-						}
-					}
-				}
-			})
+			prop = Property.new(PropertyFinder.by_key('foo'))
+			expect(prop.value_count('name', 'Luiz')).to eq(1)
 		end
 
 		it 'removes the value of a property from the values hash if the counter reaches zero' do
@@ -50,26 +39,16 @@ describe PropertyUntracker do
 			PropertyUntracker.new('foo', {'name' => 'Paulo'}).save!
 
 			expect(@collection.find.count).to eq(1)
-			doc = @collection.find.first
-			expect(doc).to eq({
-				'_id' => doc['_id'],
-				'key' => 'foo',
-				'properties' => {
-					'name' => {
-						'type' => 'string',
-						'values' => {
-							'Luiz' => 2
-						}
-					}
-				}
-			})
+			prop = Property.new(PropertyFinder.by_key('foo'))
+			expect(prop.number_of_values('name')).to eq(1)
+			expect(prop.value_count('name', 'Luiz')).to eq(2)
 		end
 
 		it 'removes the property from the properties hash if the counter of all values reaches zero' do
 			PropertyTracker.new('foo', {'name' => 'Luiz', 'age' => 20}).save!
 			PropertyUntracker.new('foo', {'name' => 'Luiz'}).save!
 			expect(@collection.find.count).to eq(1)
-			doc = @collection.find.first
+			doc = PropertyFinder.by_key('foo')
 			expect(doc).to eq({
 				'_id' => doc['_id'],
 				'key' => 'foo',
@@ -110,6 +89,7 @@ describe PropertyUntracker do
 		end
 
 		it 'untracks each element in the array of values' do
+			Property.max_properties = 10 # Just setting some high value for testing
 			PropertyTracker.new('foo', {'name' => %w(Luiz Paulo Foo)}).save!
 			PropertyUntracker.new('foo', {'name' => %w(Foo Luiz Viswanathan)}).save!
 			expect(@collection.find.count).to eq(1)
@@ -120,6 +100,7 @@ describe PropertyUntracker do
 				'properties' => {
 					'name' => {
 						'type' => 'array',
+						'is_large' => false,
 						'values' => {
 							'Paulo' => 1
 						}
@@ -133,13 +114,60 @@ describe PropertyUntracker do
 
   describe 'large collections' do
     it 'untracks a large collection value' do
-      Property.max_properties = 2
+    	Property.max_properties = 2
       PropertyTracker.new('foo', {'colors' => ['red', 'green']}).track!
       PropertyTracker.new('foo', {'colors' => ['blue']}).track! # large collection
 
+      p = Property.new(PropertyFinder.by_key('foo'))
+      expect(p.number_of_values('colors')).to eq(1)
+      expect(p.value_count('colors', '*')).to eq(3)
+
       PropertyUntracker.new('foo', {'colors' => 'red'}).untrack!
+      p = Property.new(PropertyFinder.by_key('foo'))
+      expect(p.number_of_values('colors')).to eq(1)
+      expect(p.value_count('colors', '*')).to eq(2)
     end
 
-    it 'sets the is_large flag to false if values reaches zero'
+    it 'untracks a large collection with multiple values (array)' do
+      Property.max_properties = 2
+      PropertyTracker.new('foo', {'colors' => ['red', 'green']}).track!
+      PropertyTracker.new('foo', {'colors' => ['blue']}).track! # large collection
+      PropertyUntracker.new('foo', {'colors' => ['red', 'green']}).untrack!
+
+      p = Property.new(PropertyFinder.by_key('foo'))
+      
+      expect(p.number_of_values('colors')).to eq(1)
+      expect(p.value_count('colors', '*')).to eq(1)
+    end
+
+    it 'deletes the property total count reaches zero' do
+      Property.max_properties = 2
+      PropertyTracker.new('foo', {'colors' => ['red', 'green']}).track!
+      PropertyTracker.new('foo', {'colors' => ['blue']}).track! # large collection
+      PropertyUntracker.new('foo', {'colors' => ['red', 'green']}).untrack!
+
+      p = Property.new(PropertyFinder.by_key('foo'))
+
+      expect(p.number_of_values('colors')).to eq(1)
+      expect(p.value_count('colors', '*')).to eq(1)
+      expect(p.has_large_collection_flag('colors')).to be(true)
+
+      PropertyUntracker.new('foo', {'colors' => 'red'}).untrack!
+      
+      expect(PropertyFinder.by_key('foo')).to be_nil
+    end
+
+    it 'sets the is_large to false when untracking values' do
+    	Property.max_properties = 2
+    	PropertyTracker.new('foo', {'colors' => ['red', 'green'], 'name' => 'Luiz'}).track!
+    	PropertyTracker.new('foo', {'colors' => ['blue']}).track!
+
+    	PropertyUntracker.new('foo', {'colors' => ['red', 'green', 'blue']}).untrack! #Remove the large collection
+
+    	prop = Property.new(PropertyFinder.by_key('foo'))
+    	expect(prop.has_large_collection_flag('colors')).to be_falsy
+    	expect(prop.value_count('colors')).to eq(0)
+    	expect(prop.value_count('name', 'Luiz')).to eq(1)
+    end
   end
 end

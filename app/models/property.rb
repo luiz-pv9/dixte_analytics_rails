@@ -11,6 +11,8 @@ class Property
     attr_accessor :max_properties
 	end
 
+	attr_reader :data
+
 	def initialize(data)
 		@data = data
 	end

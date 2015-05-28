@@ -24,8 +24,12 @@ class PropertyUntracker
 		total_count = property.total_count
 		@properties.each do |prop, val|
 			val.to_track_value.each do |track_val|
+				# If the property is a large collection, the non_string_track_value will be
+				# used to track occurences of values.
+				track_val = TrackingValue.non_string_track_value if property.has_large_collection_flag(prop)
 				next unless property.find_property(prop, track_val)
 				prop_val_count = property.value_count(prop, track_val)
+
 				if prop_val_count <= 1
 					unset_query['$unset'] ||= {}
 					prop_count = property.value_count(prop)
@@ -33,10 +37,23 @@ class PropertyUntracker
 						unset_query['$unset']["properties.#{prop}"] = ''
 					else
 						unset_query['$unset']["properties.#{prop}.values.#{track_val}"] = ''
+						update_query['$set'] ||= {}
+						update_query['$set']["properties.#{prop}.is_large"] = false
 					end
 				else
 					update_query['$inc'] ||= {}
-					update_query['$inc']["properties.#{prop}.values.#{track_val}"] = -1
+					# Why there is a prev_val:
+					# If it's an array in a large collection, all items will be '*'
+					# When untracking it needs to decrement multiple times for the same track_val
+					prev_val = update_query['$inc']["properties.#{prop}.values.#{track_val}"]
+					update_query['$inc']["properties.#{prop}.values.#{track_val}"] = prev_val ? prev_val - 1 : -1
+
+					# I need to update the property in-memory in order for the prop_val_count to reflect reality
+					# of the current status of the property counter.
+					# This is crucial because in the next loop, when finding the prop_val_count it will return one
+					# less than the current. This will not prevent the update_query to decrement the value (which is
+					# performance wasteful), but the end result will be correct, which is more important at the moment.
+					property.data["properties"][prop]["values"][track_val] -= 1
 				end
 				total_count -= 1
 			end
