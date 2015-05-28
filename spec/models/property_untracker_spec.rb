@@ -100,7 +100,6 @@ describe PropertyUntracker do
 				'properties' => {
 					'name' => {
 						'type' => 'array',
-						'is_large' => false,
 						'values' => {
 							'Paulo' => 1
 						}

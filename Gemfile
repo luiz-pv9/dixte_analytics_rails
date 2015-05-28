@@ -26,8 +26,6 @@ gem 'spring',        group: :development
 
 gem 'mongoid', '~> 4.0.0'
 
-gem 'sidekiq', '~> 3.3.0'
-
 group :development, :test do
 	gem 'rspec-rails', '~> 3.1.0'
 end

@@ -37,8 +37,12 @@ class PropertyUntracker
 						unset_query['$unset']["properties.#{prop}"] = ''
 					else
 						unset_query['$unset']["properties.#{prop}.values.#{track_val}"] = ''
-						update_query['$set'] ||= {}
-						update_query['$set']["properties.#{prop}.is_large"] = false
+
+						# Only need to set is_large to false if the property already has a is_large = true
+						if property.has_large_collection_flag(prop)
+							update_query['$set'] ||= {}
+							update_query['$set']["properties.#{prop}.is_large"] = false
+						end
 					end
 				else
 					update_query['$inc'] ||= {}

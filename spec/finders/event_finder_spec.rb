@@ -226,4 +226,30 @@ describe EventFinder do
 			expect(events.count).to eq(0)
 		end
 	end
+
+	describe '.by_id' do
+		it 'returns the event found for the specifided id' do
+			event = @event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'anything',
+				'properties' => {}
+			})
+
+			e = EventFinder.by_id(event['_id'])
+			expect(e['type']).to eq('anything')
+		end
+
+		it 'returns nil if no event is found' do
+			event = @event_tracker.perform({
+				'app_token' => @app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'anything',
+				'properties' => {}
+			})
+
+			e = EventFinder.by_id(BSON::ObjectId.new)
+			expect(e).to be_nil
+		end
+	end
 end

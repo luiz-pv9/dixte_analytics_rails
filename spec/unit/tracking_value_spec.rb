@@ -35,7 +35,7 @@ describe 'TrackingValue class' do
 
 		it 'returns non string track value if the type is not a string' do
 			value = TrackingValue.new 25.5
-			expect(value.to_track_value).to eq(['*'])
+			expect(value.to_track_value).to eq(['25.5'])
 		end
 
 		it 'returns an array of values if the type is an array' do

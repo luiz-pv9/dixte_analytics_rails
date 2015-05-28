@@ -1,8 +1,5 @@
 require 'rails_helper'
-require 'sidekiq/testing'
 require 'base64'
-
-Sidekiq::Testing.fake!
 
 describe ProfileReceiverController do
 	describe 'track' do
@@ -33,10 +30,8 @@ describe ProfileReceiverController do
 		end
 
 		it 'enqueues the requested data to be processed by the tracker' do
-			expect {
-				data = {'foo' => 'bar'}.to_json
-				post :track, {:data => Base64.encode64(data)}
-			}.to change(ProfileTracker.jobs, :size).by(1)
+			data = {'foo' => 'bar'}.to_json
+			post :track, {:data => Base64.encode64(data)}
 		end
 	end	
 end

@@ -2,7 +2,6 @@ require 'collections'
 require 'time_range'
 
 class EventUntracker
-	include Sidekiq::Worker
 	@@collection = Collections::Events.collection
 
 	def untrack_event_properties(event)
@@ -47,6 +46,10 @@ class EventUntracker
 			:external_id => external_id
 		})
 		untrack_by_query(events)
+	end
+
+	def self.perform(opt)
+		EventUntracker.new().perform(opt)
 	end
 
 	def perform(opt)

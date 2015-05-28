@@ -19,6 +19,7 @@ describe ProfileTracker do
 		@properties = Collections::Properties.collection
 		@profiles.find().remove_all
 		@properties.find().remove_all
+		Property.max_properties = 50
 	end
 
 	it 'returns false if the app_token is not present in the data' do
@@ -447,7 +448,7 @@ describe ProfileTracker do
 					'age' => {
 						'type' => 'number',
 						'values' => {
-							'*' => 1
+							'21' => 1
 						}
 					},
 					'colors' => {
@@ -630,7 +631,7 @@ describe ProfileTracker do
 					'age' => {
 						'type' => 'number',
 						'values' => {
-							'*' => 1
+							'3' => 1
 						}
 					}
 				}

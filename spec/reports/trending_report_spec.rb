@@ -6,6 +6,7 @@ describe TrendingReport do
 		@event_tracker = EventTracker.new
 		@profile_tracker = ProfileTracker.new
 		@app = App.create :name => 'Dixte'
+		Property.max_properties = 50
 	end
 
 	def track_event(type, happened_at, properties = {}, external_id = 'lpvasco', app_token = nil)

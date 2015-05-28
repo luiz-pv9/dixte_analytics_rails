@@ -8,7 +8,7 @@ class ProfileReceiverController < ApplicationController
 			@json_data = Base64.decode64 @raw_data
 			begin
 				@data = JSON.parse(@json_data)
-				ProfileTracker.perform_async(@data)
+				ProfileTracker.perform(@data)
 				render :text => '1'
 			rescue JSON::ParserError => e
 				render :text => '0'

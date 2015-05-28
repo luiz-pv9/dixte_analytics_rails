@@ -3,8 +3,6 @@ require 'hash_param'
 require 'collections'
 
 class ProfileTracker
-	include Sidekiq::Worker
-
 	@@collection = Collections::Profiles.collection
 
 	def update_track_query(query, prop, val)
@@ -120,6 +118,10 @@ class ProfileTracker
 			data['_id'] = @@collection.insert(data)
 			return data
 		end
+	end
+
+	def self.perform(opt)
+		ProfileTracker.new().perform(opt)
 	end
 
 	def perform(data)

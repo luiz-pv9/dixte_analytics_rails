@@ -71,5 +71,11 @@ class EventFinder
 				:app_token => opt[:app_token]
 			})
 		end
+
+		def by_id(id)
+			@@collection.find({
+				'_id' => id
+			}).first
+		end
 	end
 end

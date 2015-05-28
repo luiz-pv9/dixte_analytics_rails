@@ -14,15 +14,11 @@ describe EventTracker do
 	before :each do
 		@event_tracker = EventTracker.new
 		@profile_tracker = ProfileTracker.new
-		App.delete_all
-		Warn.delete_all
 		@profiles = Collections::Profiles.collection
 		@events = Collections::Events.collection
 		@properties = Collections::Properties.collection
 
-		@profiles.find().remove_all
-		@properties.find().remove_all
-		@events.find().remove_all
+		delete_all
 	end
 
 	it 'returns false if the app token is not present in the data' do
@@ -280,6 +276,87 @@ describe EventTracker do
 					}
 				}
 			})
+		end
+	end
+
+	describe 'updating an event' do
+		it 'updates the event properties hash' do
+			app = valid_app
+			event = @event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'anything',
+				'properties' => {
+					'name' => 'Luiz',
+					'age' => 20
+				}
+			})
+
+			expect(event['_id']).to be_truthy
+
+			@event_tracker.perform({
+				'_id' => event['_id'],
+				'properties' => {
+					'age' => 21
+				}
+			})
+
+			event = EventFinder.by_id(event['_id'])
+			expect(event['properties']).to eq({
+				'name' => 'Luiz',
+				'age' => 21
+			})
+		end
+
+		it 'updates the tracked properties for the event' do
+			app = valid_app
+			event = @event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'anything',
+				'properties' => {
+					'name' => 'Luiz',
+					'age' => 20
+				}
+			})
+			expect(event['_id']).to be_truthy
+			@event_tracker.perform({
+				'_id' => event['_id'],
+				'properties' => {
+					'age' => 21
+				}
+			})
+			property = Property.new(PropertyFinder.event(app.token, 'anything'))
+			expect(property.value_count('name', 'Luiz')).to eq(1)
+			expect(property.value_count('age', '20')).to eq(0)
+			expect(property.value_count('age', '21')).to eq(1)
+		end
+
+		it 'updates the array properties in the event' do
+			app = valid_app
+			event = @event_tracker.perform({
+				'app_token' => app.token,
+				'external_id' => 'lpvasco',
+				'type' => 'anything',
+				'properties' => {
+					'colors' => ['red', 'green'],
+					'age' => 20
+				}
+			})
+			expect(event['_id']).to be_truthy
+			@event_tracker.perform({
+				'_id' => event['_id'],
+				'properties' => {
+					'colors' => ['red', 'blue']
+				}
+			})
+
+			property = Property.new(PropertyFinder.event(app.token, 'anything'))
+			expect(property.value_count('age', '20')).to eq(1)
+			expect(property.number_of_values('colors')).to eq(2)
+			expect(property.value_count('colors', 'red')).to eq(1)
+			expect(property.value_count('colors', 'blue')).to eq(1)
+			expect(property.value_count('colors', 'green')).to eq(0)
 		end
 	end
 end

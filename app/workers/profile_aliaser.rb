@@ -1,7 +1,6 @@
 require 'collections'
 
 class ProfileAliaser
-	include Sidekiq::Worker
 	@@collection = Collections::Profiles.collection
 
 	def update_profile(app_token, previous, current)
@@ -22,6 +21,10 @@ class ProfileAliaser
 		events.update_all({
 			'$set' => {'external_id' => current}
 		})
+	end
+
+	def self.perform(opt)
+		ProfileAliaser.new().perform(opt)
 	end
 
 	def perform(opt)

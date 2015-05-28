@@ -8,7 +8,6 @@ require 'collections'
 # This class must just be called if the application wants to remove the profile
 # and all events associated with it PERMANENTLY from the database
 class ProfileUntracker
-	include Sidekiq::Worker
 	@@collection = Collections::Profiles.collection
 
 	# Removes all tracked properties stored for the specified profile.
@@ -45,14 +44,14 @@ class ProfileUntracker
 	end
 
 	def enqueue_event_untracking_for_profile(app_token, external_id)
-		EventUntracker.perform_async({
+		EventUntracker.perform({
 			:app_token => app_token,
 			:external_id => external_id
 		})
 	end
 
 	def enqueue_event_untracking_for_profiles(app_token, external_ids)
-		EventUntracker.perform_async({
+		EventUntracker.perform({
 			:app_token => app_token,
 			:external_ids => external_ids
 		})
