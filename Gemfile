@@ -26,12 +26,14 @@ gem 'spring',        group: :development
 
 gem 'mongoid', '~> 4.0.0'
 
+gem 'devise', '~> 3.5.1'
+
 group :development, :test do
 	gem 'rspec-rails', '~> 3.1.0'
 end
 
 # Use ActiveModel has_secure_password
-# gem 'bcrypt', '~> 3.1.7'
+gem 'bcrypt', '~> 3.1.7'
 
 # Use unicorn as the app server
 # gem 'unicorn'
