@@ -41,6 +41,9 @@ class EventTracker
 		append_profile_properties(data)
 		data['happened_at'] ||= Time.now.to_i
 		data['_id'] = BSON::ObjectId.new
+		if @user
+			data['modified_by'] = [@user.id]
+		end
 		@@collection.insert(data)
 		return data
 	end
@@ -136,6 +139,11 @@ class EventTracker
 		# query['$set'] ||= {}
 		# query['$set']['updated_at'] = data['updated_at'] || Time.now.to_i
 
+		if @user
+			query['$push'] ||= {}
+			query['$push']['modified_by'] = @user.id
+		end
+
 		@@collection.find({'_id' => data['_id']}).update(query)
 	end
 
@@ -143,7 +151,8 @@ class EventTracker
 		EventTracker.new().perform(opt)
 	end
 
-	def perform(data)
+	def perform(data, user = nil)
+		@user = user
 		if data['_id']
 			event = EventFinder.by_id(data['_id'])
 			return false unless event

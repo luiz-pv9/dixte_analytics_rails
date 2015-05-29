@@ -1,6 +1,7 @@
 require 'data_cleaner'
 require 'hash_param'
 require 'collections'
+require 'bson'
 
 class ProfileTracker
 	@@collection = Collections::Profiles.collection
@@ -110,12 +111,21 @@ class ProfileTracker
 			query['$set'] ||= {}
 			query['$set']['updated_at'] = data['updated_at'] || Time.now.to_i
 
+			if @user
+				query['$push'] ||= {}
+				query['$push']['modified_by'] = @user.id
+			end
+
 			@@collection.find(find_query).update(query)
 		else
 			track_insert_properties(data)
 			data['created_at'] ||= Time.now.to_i
 			data['updated_at'] ||= data['created_at']
-			data['_id'] = @@collection.insert(data)
+			if @user
+				data['modified_by'] = [@user.id]
+			end
+			data['_id'] = BSON::ObjectId.new
+			@@collection.insert(data)
 			return data
 		end
 	end
@@ -124,7 +134,8 @@ class ProfileTracker
 		ProfileTracker.new().perform(opt)
 	end
 
-	def perform(data)
+	def perform(data, user = nil)
+		@user = user
 		profile_cleaner = ProfileCleaner.new(data)
 		if profile_cleaner.clean?
 			track_profile data

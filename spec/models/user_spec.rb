@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe User, :type => :model do
+	before :each do
+		delete_all
+	end
+	
 	describe 'devise' do
 		it 'creates the user with password and password_confirmation' do
 			user = User.new(:email => 'luiz.pv9@gmail.com', :password => '1234',
