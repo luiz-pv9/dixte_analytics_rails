@@ -40,6 +40,7 @@ GEM
     bcrypt (3.1.10)
     bson (2.3.0)
     builder (3.2.2)
+    cancancan (1.10.1)
     connection_pool (2.2.0)
     devise (3.5.1)
       bcrypt (~> 3.0)
@@ -163,6 +164,7 @@ PLATFORMS
 
 DEPENDENCIES
   bcrypt (~> 3.1.7)
+  cancancan (~> 1.10.1)
   devise (~> 3.5.1)
   jbuilder (~> 2.0)
   mongoid (~> 4.0.0)

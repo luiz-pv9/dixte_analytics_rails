@@ -28,6 +28,8 @@ gem 'mongoid', '~> 4.0.0'
 
 gem 'devise', '~> 3.5.1'
 
+gem 'cancancan', '~> 1.10.1'
+
 group :development, :test do
 	gem 'rspec-rails', '~> 3.1.0'
 end
