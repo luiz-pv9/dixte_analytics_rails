@@ -42,6 +42,7 @@ def delete_all
   App.delete_all
   Warn.delete_all
   User.delete_all
+  Authorization.delete_all
   Collections::Profiles.collection.find.remove_all
   Collections::Events.collection.find.remove_all
   Collections::Properties.collection.find.remove_all
