@@ -39,7 +39,6 @@ describe ProfileTracker do
 		})
 
 		profile = ProfileFinder.by_external_id({:app_token => @app.token, :external_id => 'lpvasco'})
-
 		expect(profile['modified_by']).to eq([@user.id, @user.id])
 	end
 end
